@@ -172,7 +172,7 @@ try {
               <strong>Vision</strong>
             </p>
 
-          <p>We envision the University of Batangas to be a center of excellence committed to serve the broader community through quality education.</p>
+          <p>We envision the University of Batangas to be a center of excellence committed to serve the broadecdr community through quality education.</p>
 
         </div>
         <div class="row-2">
