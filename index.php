@@ -54,6 +54,7 @@ try {
     <link rel="stylesheet" href="plugins/logincss/loginform.css">
     <link rel="stylesheet" href="plugins/slideshow/css.css">
     <!---we had linked our css file----->
+       <!---we had linked our css file----->
 </head>
 <body>
 <nav class="sticky">
