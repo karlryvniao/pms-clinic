@@ -10,7 +10,7 @@ $patients = getPatients($con);
 <head>
  <?php include './config/site_css_links.php';?>
  <link rel="stylesheet" type='' href="plugins/admincss/admin.css" />
- <title>Patient History - Clinic's Patient Management System in PHP</title>
+ <title>Patient History of University of Batangas in Lipa</title>
 
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
@@ -71,6 +71,8 @@ include './config/sidebar.php';?>
                   <colgroup>
                     <col width="10%">
                     <col width="15%">
+                    <col width="10%">
+                    <col width="10%">
                     <col width="15%">
                     <col width="40%">
                     <col width="10%">
@@ -81,6 +83,8 @@ include './config/sidebar.php';?>
                     <tr class="bg-gradient-primary text-light">
                       <th class="p-1 text-center">S.No</th>
                       <th class="p-1 text-center">Visit Date</th>
+                      <th class="p-1 text-center">Blood Pressure</th>
+                      <th class="p-1 text-center">Weight</th>
                       <th class="p-1 text-center">Disease</th>
                       <th class="p-1 text-center">Medicine</th>
                       <th class="p-1 text-center">Packing</th>

@@ -5,11 +5,14 @@ include './common_service/common_functions.php';
 $message = '';
 
 if(isset($_POST['submit'])) {
-  $medicineId = $_POST['medicine'];
-  $packing = $_POST['packing'];
-  
+  $medicineName = $_POST['medicine_name'];
+  $total_capsules = $_POST['total_capsules'];
+  $expire_date = $_POST['expire_date'];
 
-  $query = "insert into `medicine_details` (`medicine_id`, `packing`) values($medicineId, '$packing');";
+  $expireDateArr = explode("/", $expire_date);
+
+  $cleanExpireDate = $expireDateArr[2] . '-' . $expireDateArr[0] . '-' . $expireDateArr[1];
+  $query = "INSERT into `medicine_details` (`medicine_name`, `total_capsules`, `expire_date`) values ('$medicineName', '$total_capsules', '$cleanExpireDate');";
   try {
 
     $con->beginTransaction();
@@ -19,7 +22,7 @@ if(isset($_POST['submit'])) {
 
     $con->commit();
 
-    $message = 'Packing saved successfully.';
+    $message = 'Medicine added successfully.';
 
   } catch(PDOException $ex) {
 
@@ -34,19 +37,17 @@ if(isset($_POST['submit'])) {
 }
 
 
-$medicines = getMedicines($con);
+// $medicines = getMedicines($con);
 
-$query = "select `m`.`medicine_name`, 
-`md`.`id`, `md`.`packing`,  `md`.`medicine_id` 
-from `medicines` as `m`, 
-`medicine_details` as `md` 
-where `m`.`id` = `md`.`medicine_id` 
-order by `m`.`id` asc, `md`.`id` asc;";
+$query = "select `md`.`medicine_name`, 
+`md`.`id`, `md`.`total_capsules`, `md`.`expire_date`
+from `medicine_details` as `md` 
+order by `md`.`id` asc;";
 
  try {
   
     $stmtDetails = $con->prepare($query);
-    $stmtDetails->execute();
+    $stmtDetails->execute();   
 
   } catch(PDOException $ex) {
 
@@ -61,7 +62,9 @@ order by `m`.`id` asc, `md`.`id` asc;";
 <head>
  <?php include './config/site_css_links.php';?>
  <?php include './config/data_tables_css.php';?>
- <title>Medicine Details - Clinic's Patient Management System in PHP</title>
+ <link rel="stylesheet" type='' href="plugins/admincss/admin.css" />
+ <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+ <title>University of Batangas in Lipa Medicine Details</title>
 
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
@@ -103,17 +106,37 @@ include './config/sidebar.php';?>
             <form method="post">
               <div class="row">
                 <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
-                  <label>Select Medicine</label>
-                  <select id="medicine" name="medicine" class="form-control form-control-sm rounded-0" required="required">
+                  <!-- <label>Select Medicine</label> -->
+                  <!-- <select id="medicine" name="medicine" class="form-control form-control-sm rounded-0" required="required">
                     <?php echo $medicines;?>
-                  </select>
+                  </select> -->
+                  <label>Medicine Name</label>
+                  <input type="text" id="medicine_name" name="medicine_name" required="required"
+                  class="form-control form-control-sm rounded-0" />
                 </div>
 
                 <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
-                  <label>Packing</label>
-                  <input id="packing" name="packing" class="form-control form-control-sm rounded-0"  required="required" />
+                  <label>Total Capsules</label>
+                  <input id="total_capsules" name="total_capsules" class="form-control form-control-sm rounded-0"  required="required" />
                 </div>
 
+                <div class="col-lg-3 col-md-3 col-sm-4 col-xs-10">
+                  <div class="form-group">
+                    <label>Expiration Date</label>
+                    <div class="input-group date" 
+                      id="expire_date" 
+                      data-target-input="nearest">
+                      <input type="text" class="form-control form-control-sm rounded-0 datetimepicker-input" data-target="#expire_date" name="expire_date" required="required" data-toggle="datetimepicker" autocomplete="off"/>
+                      <div class="input-group-append" 
+                        data-target="#expire_date" 
+                        data-toggle="datetimepicker">
+                        <div class="input-group-text">
+                          <i class="fa fa-calendar"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div class="col-lg-1 col-md-2 col-sm-4 col-xs-12">
                   <label>&nbsp;</label>
                   <button type="submit" id="submit" name="submit" 
@@ -161,7 +184,8 @@ include './config/sidebar.php';?>
                   <tr>
                     <th>S.No</th>
                     <th>Medicine Name</th>
-                    <th>Packing</th>
+                    <th>Total Capsules</th>
+                    <th>Expiration Date</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -175,16 +199,45 @@ include './config/sidebar.php';?>
                   <tr>
                     <td class="text-center"><?php echo $serial; ?></td>
                     <td><?php echo $row['medicine_name'];?></td>
-                    <td><?php echo $row['packing'];?></td>
-                    
+                    <td><?php echo $row['total_capsules'];?></td>
+                    <td><?= $row['expire_date'] ?></td>
                     <td class="text-center">
-                      <a href="update_medicine_details.php?medicine_id=<?php echo $row['medicine_id'];?>&medicine_detail_id=<?php echo $row['id'];?>&packing=<?php echo $row['packing'];?>" 
+                      <a href="update_medicine_details.php?medicine_id=<?php echo $row['id'];?>&medicine_detail_id=<?php echo $row['id'];?>&total_capsules=<?php echo $row['total_capsules'];?>&expire_date=<?= $row['expire_date'] ?>" 
                       class = "btn btn-primary btn-sm btn-flat">
                       <i class="fa fa-edit"></i>
                       </a>
+                      <button type="button" class="btn btn-danger btn-sm btn-flat" data-toggle="modal" data-target="#form_delete<?php echo $row['id']?>">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
                     </td>
                    
                   </tr>
+                  <!-- Modal -->
+                  <div class="modal fade" id="form_delete<?php echo $row['id']?>" tabindex="-1" role="dialog" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Delete Medicine</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete <?php echo $row['medicine_name']?>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                <form method="POST" action="remove_medicineform.php">
+                                                    <input type="hidden" name="form_id" value="<?php echo $row['id']?>"/>
+                                                    <input type="hidden" name="form_medicinename" value="<?php echo $row['medicine_name']?>"/>
+                                                    <input type="hidden" name="form_totalcapsules" value="<?php echo $row['total_capsules']?>"/>
+                                                    <input type="hidden" name="form_expiredate" value="<?php echo $row['expire_date']?>"/>
+                                                    <button type="submit" class="btn btn-danger" name="form_remove">Continue</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                 <?php
                 }
                 ?>
@@ -212,10 +265,16 @@ if(isset($_GET['message'])) {
 
 <?php include './config/site_js_links.php'; ?>
 <?php include './config/data_tables_js.php'; ?>
+<script src="plugins/moment/moment.min.js"></script>
+<script src="plugins/daterangepicker/daterangepicker.js"></script>
+<script src="plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
 <script>
   showMenuSelected("#mnu_medicines", "#mi_medicine_details");
 
-  var message = '<?php echo $message;?>';
+    var message = '<?php echo $message;?>';
+    $('#expire_date').datetimepicker({
+      format:"L"
+    })
 
   if(message !== '') {
     showCustomMessage(message);

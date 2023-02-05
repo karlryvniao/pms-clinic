@@ -6,20 +6,84 @@ require_once './vendor/autoload.php';
 include './config/connection.php';
 include './common_service/common_functions.php';
 // Configure HTTP basic authorization: BasicAuth
+// username: hiruzen2497
+// password: 9DA29B8C-B496-760D-BF13-B5E2B7825BAD
 $config = ClickSend\Configuration::getDefaultConfiguration()
-    ->setUsername('hiruzen2497')
-    ->setPassword('9DA29B8C-B496-760D-BF13-B5E2B7825BAD');
+    ->setUsername('vhon0314@gmail.com')
+    ->setPassword('6C087B88-E076-481F-26AF-B19ABB3AFB70');
 $apiInstance = new ClickSend\Api\SMSApi(new GuzzleHttp\Client(),$config);
 
 
 $message = '';
-if (isset($_POST['save_Patient'])) {
+try {
+    $q = $con->prepare("DESCRIBE past_medical_history;");
+    $q->execute();
+    $past_medical_fields = array_values($q->fetchAll(PDO::FETCH_COLUMN));
+    array_shift($past_medical_fields);
+    $past_medical_len = (int) count($past_medical_fields);
 
+
+    $q = $con->prepare("DESCRIBE family_history;");
+    $q->execute();
+    $family_history_fields = array_values($q->fetchAll(PDO::FETCH_COLUMN));
+    array_shift($family_history_fields);
+    $family_history_len = (int) count($family_history_fields);
+
+    $q = $con->prepare("DESCRIBE immunization;");
+    $q->execute();
+    $immunization_fields = array_values($q->fetchAll(PDO::FETCH_COLUMN));
+    array_shift($immunization_fields);
+    $immunization_len = (int) count($immunization_fields);
+
+
+} catch(PDOException $ex) {
+    echo $ex->getMessage();
+    echo $ex->getTraceAsString();
+    exit;
+}
+
+
+if(isset($_POST['sendMessageBtn'])) {
+
+    $patientNumber = $_POST['messagePhoneNumber'];
+    $patientname = $_POST['messagePatientName'];
+
+
+    $patientLastname = trim($patientname);
+
+    $name = trim($patientname);
+    $last_name = (strpos($name, ' ') === false) ? '' : preg_replace('#.*\s([\w-]*)$#', '$1', $name);
+    $first_name = trim( preg_replace('#'.preg_quote($last_name,'#').'#', '', $name ) );
+
+
+
+    try {
+        $msg = new SmsMessage();
+        $msg->setBody("Hello Mr/Mrs '".$last_name."',  '".$patientname."' is currently admitted to University of Batangas Clinic");
+        $msg->setTo($patientNumber);
+        $msg->setSource("sdk");
+// \ClickSend\Model\SmsMessageCollection | SmsMessageCollection model
+        $sms_messages = new \ClickSend\Model\SmsMessageCollection();
+        $sms_messages->setMessages([$msg]);
+        $result = $apiInstance->smsSendPost($sms_messages);
+
+        $message = 'Emergency message has been sent.';
+    } catch(PDOException $e) {
+        echo $e->getMessage();
+
+    }
+
+    header("Location:congratulation.php?goto_page=patients.php&message=$message");
+
+}
+if (isset($_POST['save_Patient'])) {
+    print_r($_POST);
     $patientName = trim($_POST['patient_name']);
     $address = trim($_POST['address']);
     $course = trim($_POST['course']);
 
     $dateBirth = trim($_POST['date_of_birth']);
+    $todays_time = $_POST['todays_time'];
     $dateArr = explode("/", $dateBirth);
 
     $dateBirth = $dateArr[2].'-'.$dateArr[0].'-'.$dateArr[1];
@@ -29,29 +93,83 @@ if (isset($_POST['save_Patient'])) {
     $patientName = ucwords(strtolower($patientName));
     $address = ucwords(strtolower($address));
     
+    $past_medical_values = [];
+
+    foreach($past_medical_fields as $past_medical_field){
+        array_push($past_medical_values, $_POST[$past_medical_field . '_pm']);
+    }
+    $past_medical_values_str = implode("', '" , $past_medical_values);
+
+    $family_history_values = [];
+    foreach($family_history_fields as $family_history_field){
+        array_push($family_history_values, $_POST[$family_history_field]);
+    }
+    $family_history_values_str = implode("', '" , $family_history_values);
+
+    $family_history_rel_values = [];
+    foreach($family_history_fields as $family_history_field){
+        array_push($family_history_rel_values, $_POST[$family_history_field . '_relation']);
+    }
+    $family_history_rel_str = implode("', '" , $family_history_rel_values);
+
+    $immunization_values = [];
+    foreach($immunization_fields as $immunization_field){
+        array_push($immunization_values, formatDateInsert($_POST[$immunization_field] ?? '00/00/0000'));
+    }
+    $immunization_str = implode("', '" , $immunization_values);
+
+
+
 
     $gender = $_POST['gender'];
     $complaint = trim($_POST['complaint']);
     if ($patientName != '' && $address != '' &&
         $course != '' && $dateBirth != '' && $phoneNumber != '' && $gender != '' && $complaint != '') {
-        $query = "INSERT INTO `patients`(`patient_name`, `address`, `course`, `date_of_birth`, `phone_number`, `gender`, `complaint`)
-                    VALUES('$patientName', '$address', '$course', '$dateBirth','$phoneNumber', '$gender', '$complaint');";
+        $query = "INSERT INTO `patients`(`patient_name`, `address`, `course`, `date_of_birth`, todays_time, `phone_number`, `gender`, `complaint`)
+                    VALUES('$patientName', '$address', '$course', '$dateBirth', '$todays_time', '$phoneNumber', '$gender', '$complaint');";
         try {
 
             $con->beginTransaction();
             $stmtPatient = $con->prepare($query);
             $stmtPatient->execute();
+
+            $latestPatientId = $con->lastInsertId();
+
+            $past_medical_query = "INSERT INTO `past_medical_history`(" . implode(',', $past_medical_fields) . ") 
+                                VALUES('$past_medical_values_str')" ;
+
+            $pastMedicalRecordStmt = $con->prepare($past_medical_query);
+            $pastMedicalRecordStmt->execute();
+
+            $latestPastMedicalID = $con->lastInsertId();
+
+            $family_history_query = "INSERT INTO `family_history`(" . implode(',', $family_history_fields) . ") 
+                                VALUES('$family_history_values_str')" ;
+
+            $familyHistoryStmt = $con->prepare($family_history_query);
+            $familyHistoryStmt->execute();
+
+            $latestFamilyHistoryId = $con->lastInsertId();
+
+            $family_history_relation_query = "INSERT INTO `family_history_relation`( id, " . implode(',', $family_history_fields) . ") 
+                                        VALUES($latestFamilyHistoryId, '$family_history_rel_str')" ;
+            $familyHistoryRelStmt = $con->prepare($family_history_relation_query);
+            $familyHistoryRelStmt->execute();
+
+            $latestFamilyHistoryRelId = $con->lastInsertId();
+
+            $immunization_query = "INSERT INTO `immunization`(" . implode(',', $immunization_fields) . ") 
+                                        VALUES('$immunization_str')" ;
+            $immunizationStmt = $con->prepare($immunization_query);
+            $immunizationStmt->execute();
+            $latestImmunizationId = $con->lastInsertId();
+
+            $health_record_query = "INSERT INTO `health_record`(`patient_id`, `past_medical_history_id`, `family_history_id`, `immunization_id`)
+                                    VALUES($latestPatientId, $latestPastMedicalID, $latestFamilyHistoryId, $latestImmunizationId)";
+            $healthRecordStmt = $con->prepare($health_record_query);
+            $healthRecordStmt->execute();
+                
             $con->commit();
-
-            $msg = new SmsMessage();
-            $msg->setBody("Hello, this is automated message from PMS");
-            $msg->setTo($phoneNumber);
-            $msg->setSource("sdk");
-            // \ClickSend\Model\SmsMessageCollection | SmsMessageCollection model
-            $sms_messages = new \ClickSend\Model\SmsMessageCollection();
-            $sms_messages->setMessages([$msg]);
-
-            $result = $apiInstance->smsSendPost($sms_messages);
 
             $message = 'patient added successfully.';
         } catch(PDOException $ex) {
@@ -70,8 +188,7 @@ if (isset($_POST['save_Patient'])) {
 
 try {
 
-    $query = "SELECT `id`, `patient_name`, `address`, 
-`course`, date_format(`date_of_birth`, '%d %b %Y') as `date_of_birth`, 
+    $query = "SELECT  patients.*, date_format(`date_of_birth`, '%d %b %Y') as `date_of_birth`, 
 `phone_number`, `gender`, `complaint`
 FROM `patients` order by `patient_name` asc;";
 
@@ -84,6 +201,7 @@ FROM `patients` order by `patient_name` asc;";
     exit;
 }
 
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -93,7 +211,7 @@ FROM `patients` order by `patient_name` asc;";
     <?php include './config/data_tables_css.php';?>
 
     <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
-    <title>Patients - Clinic's Patient Management System in PHP</title>
+    <title></title>
 
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
@@ -117,7 +235,6 @@ FROM `patients` order by `patient_name` asc;";
 
         <!-- Main content -->
         <section class="content">
-
             <!-- Default box -->
             <div class="card card-outline card-primary rounded-0 shadow">
                 <div class="card-header">
@@ -148,8 +265,21 @@ FROM `patients` order by `patient_name` asc;";
                             </div>
                             <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
                                 <label>Course</label>
-                                <input type="text" id="course" name="course" required="required"
-                                       class="form-control form-control-sm rounded-0"/>
+                                <select class="form-control form-control-sm rounded-0" id="course" name="course" required="required"> 
+                                <option value="">--- Select Course ---</option>
+                                <option value="Bachelor of Science in Accountancy">Bachelor of Science in Accountancy</option>
+                                <option value="Bachelor of Science in Business Administration">Bachelor of Science in Business Administration</option>
+                                <option value="Bachelor of Science in Computer Engineering">Bachelor of Science in Computer Engineering</option>
+                                <option value="Bachelor of Science in Criminology">Bachelor of Science in Criminology</option>
+                                <option value="Bachelor of Science in Education">Bachelor of Science in Education</option>
+                                <option value="Bachelor of Science in Industrial Engineering">Bachelor of Science in Industrial Engineering</option>
+                                <option value="Bachelor of Science in Information Technology">Bachelor of Science in Information Technology</option>
+                                <option value="International Hospitality Management">International Hospitality Management</option>
+                                <option value="Bachelor of Science in Legal Management">Bachelor of Science in Legal Management</option>
+                                <option value="Bachelor of Science in Psychology">Bachelor of Science in Psychology</option>
+                                <option value="Bachelor of Science in Tourism Management">Bachelor of Science in Tourism Management</option>
+                            
+                            </select>
                             </div>
                             <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
                                 <div class="form-group">
@@ -167,6 +297,15 @@ FROM `patients` order by `patient_name` asc;";
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
+                                <div class="form-group">
+                                    <label>Today's Time</label>
+                                    <input type="time" class="form-control form-control-sm rounded-0" data-target="#todays_time" name="todays_time" autocomplete="off" />
+                                </div>
+                            </div>
+
+
                             <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
                                 <label>Phone Number</label>
                                 <input type="text" id="phone_number" name="phone_number" required="required"
@@ -184,6 +323,180 @@ FROM `patients` order by `patient_name` asc;";
                                 <label>Complaints</label>
                                 <input type="text" id="complaint" name="complaint" required="required"
                                        class="form-control form-control-sm rounded-0"/>
+                            </div>
+                        </div>
+                        <div class="clearfix">&nbsp;</div>
+                        <strong>Past Medical History: Has the child suffered from any of the following</strong>
+                        <div class="row">
+                            <div class="col">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Disease</th> 
+                                            <th scope="col">Yes</th>
+                                            <th scope="col" class="border-right">No</th>
+                                            <th scope="col" >Disease</th>
+                                            <th scope="col">Yes</th>
+                                            <th scope="col">No</th>
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php for($i = 0; $i < $past_medical_len; $i+=2): ?>
+                                            <tr class="border-bottom">
+                                                <td><?= makeTitle($past_medical_fields[$i], '_') ?></td>
+                                                <td>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i] . '_pm' ?>" id="<?= $past_medical_fields[$i] . '_pm' ?>" value="yes" required>
+                                                    </div>
+                                                </td>
+                                                <td class="border-right">
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i] . '_pm' ?>" id="<?=$past_medical_fields[$i] . '_pm' ?>" value="no" required>
+                                                    </div>
+                                                </td>
+                                                <?php if($i + 1 < $past_medical_len): ?>
+                                                    <td><?= makeTitle($past_medical_fields[$i + 1], '_') ?></td>
+                                                    <td>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i + 1] . '_pm' ?>" id="<?= $past_medical_fields[$i + 1] . '_pm' ?>" value="yes" required>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i + 1] . '_pm' ?>" id="<?= $past_medical_fields[$i + 1] . '_pm' ?>" value="no" required>
+                                                            
+                                                        </div>
+                                                    </td>
+                                                <?php endif; ?>
+                                        <?php endfor; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="clearfix">&nbsp;</div>
+                        <strong>Family History</strong>
+                        <div class="row">
+                            <div class="col">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Disease</th>
+                                            <th scope="col">Yes</th>
+                                            <th scope="col">No</th>
+                                            <th scope="col" class="border-right">Relation</th>
+                                            <th scope="col">Disease</th>
+                                            <th scope="col">Yes</th>
+                                            <th scope="col">No</th>
+                                            <th scope="col">Relation</th>
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php for($i = 0 ; $i < $family_history_len ; $i+=2): ?>
+                                            <tr class="border-bottom">
+                                                <td><?= makeTitle($family_history_fields[$i], '_') ?></td>
+                                                <td>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i] ?>" id="<?= $family_history_fields[$i] ?>" value="yes" required>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i] ?>" id="<?= $family_history_fields[$i] ?>" value="no" required>
+                                                    </div>
+                                                </td>
+                                                <td class="border-right">
+                                                    <select class="form-control form-control-sm rounded-0" id="<?= $family_history_fields[$i] . '_relation'?>" name="<?= $family_history_fields[$i] . '_relation'?>" required="required"> 
+                                                        <option value="">--- Select Relation ---</option>
+                                                        <option value="None">None</option>
+                                                        <option value="Grandparents">Grandparents</option>
+                                                        <option value="Parents">Parents</option>
+                                                        <option value="Aunts/Uncles">Aunts/Uncles</option>
+                                                        <option value="Brother/Sister">Brother/Sister</option>
+                                                        <option value="Nieces/Nephews">Nieces/Nephews</option>
+                                                        
+                                                </td>
+                                                <?php if($i + 1 < $family_history_len): ?>
+                                                    <td><?= makeTitle($family_history_fields[$i + 1], '_') ?></td>
+                                                    <td>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i + 1] ?>" id="<?= $family_history_fields[$i + 1] ?>" value="yes" required>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i + 1] ?>" id="<?= $family_history_fields[$i + 1] ?>" value="no" required>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                    <select class="form-control form-control-sm rounded-0" id="<?= $family_history_fields[$i] . '_relation'?>" name="<?= $family_history_fields[$i] . '_relation'?>" required="required"> 
+                                                        <option value="">--- Select Relation ---</option>
+                                                        <option value="None">None</option>
+                                                        <option value="Grandparents">Grandparents</option>
+                                                        <option value="Parents">Parents</option>
+                                                        <option value="Aunts/Uncles">Aunts/Uncles</option>
+                                                        <option value="Brother/Sister">Brother/Sister</option>
+                                                        <option value="Nieces/Nephews">Nieces/Nephews</option>
+                                                    </td>
+                                                <?php endif ?>
+                                            </tr>
+                                        <?php endfor; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="clearfix">&nbsp;</div>
+                        <strong>Immunization</strong>
+                        <div class="row">
+                            <div class="col">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Immunization</th>
+                                            <th scope="col" class="border-right">Dates</th>
+                                            <th scope="col">Immunization</th>
+                                            <th scope="col">Dates</th>
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php for($i = 0 ; $i < $immunization_len; $i+=2): ?>
+                                            <tr class="border-bottom">
+                                                <td><?= makeTitle($immunization_fields[$i], '_') ?></td>
+                                                <td class="border-right">
+                                                    <div class="input-group date"
+                                                        id="<?= $immunization_fields[$i] ?>"
+                                                        data-target-input="nearest">
+                                                        <input type="text" class="form-control form-control-sm rounded-0 datetimepicker-input" data-target="#<?= $immunization_fields[$i] ?>" name="<?= $immunization_fields[$i] ?>"
+                                                            data-toggle="datetimepicker" autocomplete="off" />
+                                                        <div class="input-group-append"
+                                                            data-target="#<?= $immunization_fields[$i] ?>"
+                                                            data-toggle="datetimepicker">
+                                                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <?php if($i + 1 < $immunization_len): ?>
+                                                    <td><?= makeTitle($immunization_fields[$i + 1], '_') ?></td>
+                                                    <td>
+                                                        <div class="input-group date"
+                                                            id="<?= $immunization_fields[$i+1] ?>"
+                                                            data-target-input="nearest">
+                                                            <input type="text" class="form-control form-control-sm rounded-0 datetimepicker-input" data-target="#<?= $immunization_fields[$i+1] ?>" name="<?= $immunization_fields[$i + 1] ?>"
+                                                                data-toggle="datetimepicker" autocomplete="off" />
+                                                            <div class="input-group-append"
+                                                                data-target="#<?= $immunization_fields[$i+1] ?>"
+                                                                data-toggle="datetimepicker">
+                                                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                <?php endif ?>
+                                            </tr>
+                                        <?php endfor; ?>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -233,7 +546,7 @@ FROM `patients` order by `patient_name` asc;";
                                 <th>Patient Name</th>
                                 <th>Address</th>
                                 <th>Course</th>
-                                <th>Date Of Birth</th>
+                                <th>Date Time</th>
                                 <th>Phone Number</th>
                                 <th>Gender</th>
                                 <th>Complaints</th>
@@ -252,11 +565,11 @@ FROM `patients` order by `patient_name` asc;";
                                     <td><?php echo $row['patient_name'];?></td>
                                     <td><?php echo $row['address'];?></td>
                                     <td><?php echo $row['course'];?></td>
-                                    <td><?php echo $row['date_of_birth'];?></td>
+                                    <td><?php echo $row['date_of_birth'] .' '. date('h:i a',strtotime($row['todays_time']));?></td>
                                     <td><?php echo $row['phone_number'];?></td>
                                     <td><?php echo $row['gender'];?></td>
-                                    <td><?php echo $row['course'];?></td>
-                                    <td>
+                                    <td><?php echo $row['complaint'];?></td>
+                                    <td style="display: flex;">
                                         <a href="update_patient.php?id=<?php echo $row['id'];?>" class = "btn btn-primary btn-sm btn-flat">
                                             <i class="fa fa-edit"></i>
                                         </a>
@@ -308,9 +621,70 @@ FROM `patients` order by `patient_name` asc;";
         if(message !== '') {
             showCustomMessage(message);
         }
+
         $('#date_of_birth').datetimepicker({
             format: 'L'
         });
+
+        $('#dpt_opv_i').datetimepicker({
+            format: 'L'
+        });
+        $('#dpt_opv_ii').datetimepicker({
+            format: 'L'
+        });
+        $('#dpt_opv_iii').datetimepicker({
+            format: 'L'
+        });
+        $('#dpt_opv_booster_i').datetimepicker({
+            format: 'L'
+        });
+        $('#dpt_opv_booster_ii').datetimepicker({
+            format: 'L'
+        });
+        $('#hib_i').datetimepicker({
+            format: 'L'
+        });
+        $('#hib_ii').datetimepicker({
+            format: 'L'
+        });
+        $('#hib_iii').datetimepicker({
+            format: 'L'
+        });
+        $('#anti_measios').datetimepicker({
+            format: 'L'
+        });
+        $('#anti_hepit_b_i').datetimepicker({
+            format: 'L'
+        });
+        $('#anti_hepit_b_ii').datetimepicker({
+            format: 'L'
+        });
+        $('#anti_hepit_b_iii').datetimepicker({
+            format: 'L'
+        });
+        $('#mmr').datetimepicker({
+            format: 'L'
+        });
+        $('#anti_chicken_pox').datetimepicker({
+            format: 'L'
+        });
+        $('#anti_hepepititis_a_i').datetimepicker({
+            format: 'L'
+        });
+        $('#anti_hepepititis_a_ii').datetimepicker({
+            format: 'L'
+        });
+        $('#anti_hepepititis_a_iii').datetimepicker({
+            format: 'L'
+        });
+        $('#anti_typhoid_fever').datetimepicker({
+            format: 'L'
+        });
+        $('#others').datetimepicker({
+            format: 'L'
+        });
+
+
 
 
         $(function () {

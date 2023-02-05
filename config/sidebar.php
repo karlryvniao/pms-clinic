@@ -6,8 +6,8 @@ if(!(isset($_SESSION['user_id']))) {
 ?>
 <aside class="main-sidebar sidebar-dark-primary bg-black elevation-4">
 <link rel="stylesheet" type='' href="plugins/admincss/admin.css" />
-    <a href="./" class="brand-link logo-switch bg-black">
-      <h4 class="brand-image-xl logo-xs mb-0 text-center"><b>CMS</b></h4>
+    <a href="#" class="brand-link logo-switch bg-black">
+      <h4 class="brand-image-xl logo-xs mb-0 text-center"><b>UB</b></h4>
       <h4 class="brand-image-xl logo-xl mb-0 text-center">UB <b>Clinic</b></h4>
     </a>
 
@@ -87,13 +87,13 @@ if(!(isset($_SESSION['user_id']))) {
               </p>
             </a>
             <ul class="nav nav-treeview">
-              <li class="nav-item">
+              <!-- <li class="nav-item">
                 <a href="medicines.php" class="nav-link" 
                 id="mi_medicines">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Add Medicine</p>
                 </a>
-              </li>
+              </li> -->
               <li class="nav-item">
                 <a href="medicine_details.php" class="nav-link" 
                 id="mi_medicine_details">
@@ -109,21 +109,32 @@ if(!(isset($_SESSION['user_id']))) {
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-edit"></i>
               <p>
-                Reports
+                SMS and Analytics
                 <i class="fas fa-angle-left right"></i>
               </p>
             </a>
             
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="reports.php" class="nav-link" 
+                <a href="patient_total.php" class="nav-link" 
                 id="mi_reports">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Reports</p>
+                  <p>SMS </p>
                 </a>
               </li>
               
             </ul>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="reports.php" class="nav-link" 
+                id="mi_reports">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Analytic Reports</p>
+                </a>
+              </li>
+              
+            </ul>
+            
           </li> 
           <li class="nav-item" id="mnu_forms">
             <a href="forms.php" class="nav-link">

@@ -7,18 +7,18 @@
     /**
     medicines (medicine_name)
     medicine_details (packing)
-    patient_visits (visit_date, disease)
+    patient_visits (visit_date, disease, bp, weight)
     patient_medication_history (quantity, dosage)
 
     */
-    $query = "SELECT `m`.`medicine_name`, `md`.`packing`, 
-    `pv`.`visit_date`, `pv`.`disease`, `pmh`.`quantity`, `pmh`.`dosage` 
-    from `medicines` as `m`, `medicine_details` as `md`, 
+    $query = "SELECT `md`.`medicine_name`, `md`.`total_capsules`, 
+    `pv`.`visit_date`, `pv`.`disease`, `pv`.`bp`, `pv`.`weight`, `pmh`.`quantity` 
+    from `medicine_details` as `md`, 
     `patient_visits` as `pv`, `patient_medication_history` as `pmh` 
-    where `m`.`id` = `md`.`medicine_id` and 
+    where
     `pv`.`patient_id` = $patientId and 
     `pv`.`id` = `pmh`.`patient_visit_id` and 
-    `md`.`id` = `pmh`.`medicine_details_id` 
+    `md`.`id` = `pmh`.`medicine_detail_id` 
     order by `pv`.`id` asc, `pmh`.`id` asc;";
 
     try {
@@ -32,11 +32,13 @@
         
         $data = $data.'<td class="px-2 py-1 align-middle text-center">'.$i.'</td>';
         $data = $data.'<td class="px-2 py-1 align-middle">'.date("M d, Y", strtotime($r['visit_date'])).'</td>';
+        $data = $data.'<td class="px-2 py-1 align-middle">'.$r['bp'].'</td>';
+        $data = $data.'<td class="px-2 py-1 align-middle">'.$r['weight'].'</td>';
         $data = $data.'<td class="px-2 py-1 align-middle">'.$r['disease'].'</td>';
         $data = $data.'<td class="px-2 py-1 align-middle">'.$r['medicine_name'].'</td>';
-        $data = $data.'<td class="px-2 py-1 align-middle text-right">'.$r['packing'].'</td>';
+        $data = $data.'<td class="px-2 py-1 align-middle text-right">'.$r['total_capsules'].'</td>';
         $data = $data.'<td class="px-2 py-1 align-middle text-right">'.$r['quantity'].'</td>';
-        $data = $data.'<td class="px-2 py-1 align-middle text-right">'.$r['dosage'].'</td>';
+        $data = $data.'<td class="px-2 py-1 align-middle text-right">'.$r['quantity'].'</td>';
 
         $data = $data.'</tr>';
       }

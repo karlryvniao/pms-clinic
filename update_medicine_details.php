@@ -6,14 +6,21 @@ $message = '';
 
 if(isset($_POST['submit'])) {
 
-  $medicineId = $_POST['medicine'];
-  $medicineDetailId = $_POST['hidden_id'];
-  $packing = $_POST['packing'];  
+  $medicineName = $_POST['medicine_name'];
+  $medicineId = $_POST['medicine_id'];
+  $total_capsules = $_POST['total_capsules'];  
+  $expire_date = $_POST['expire_date'];
 
-  $query = "update `medicine_details` 
-  set `medicine_id` = $medicineId, 
-  `packing` = '$packing' 
-  where `id` = $medicineDetailId;";
+  $expireDateArr = explode("/", $expire_date);
+
+  $cleanExpireDate = $expireDateArr[2] . '-' . $expireDateArr[0] . '-' . $expireDateArr[1];
+  
+
+  $query = "UPDATE `medicine_details` 
+  set `medicine_name` = '$medicineName', 
+  `total_capsules` = '$total_capsules',
+  `expire_date` = '$cleanExpireDate' 
+  where `id` = $medicineId;";
 
   try {
 
@@ -39,9 +46,15 @@ if(isset($_POST['submit'])) {
 
 $medicineId = $_GET['medicine_id'];
 $medicineDetailId = $_GET['medicine_detail_id'];
-$packing = $_GET['packing'];
+$total_capsules = $_GET['total_capsules'];
+$expire_date = $_GET['expire_date'];
 
-$medicines = getMedicines($con, $medicineId);
+
+
+
+$medicine = getMedicine($con, $medicineId);
+
+
 
 ?>
 <!DOCTYPE html>
@@ -74,7 +87,6 @@ include './config/sidebar.php';?>
 
       <!-- Main content -->
       <section class="content">
-
         <!-- Default box -->
         <div class="card card-outline card-primary rounded-0 shadow">
           <div class="card-header">
@@ -90,20 +102,41 @@ include './config/sidebar.php';?>
           <div class="card-body">
             <form method="post">
 
-              <input type="hidden" name="hidden_id" 
+              <input type="hidden" name="medicine_id" 
               value="<?php echo $medicineDetailId;?>" />
 
               <div class="row">
                 <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
-                  <label>Select Medicine</label>
+                  <!-- <label>Select Medicine</label>
                   <select id="medicine" name="medicine" class="form-control form-control-sm rounded-0" required="required">
                     <?php echo $medicines;?>
-                  </select>
+                  </select> -->
+                  <label>Medicine Name</label>
+                  <input type="text" id="medicine_name" name="medicine_name" value="<?= $medicine->medicine_name ?>"
+                  class="form-control form-control-sm rounded-0" />
                 </div>
 
                 <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
                   <label>Packing</label>
-                  <input id="packing" name="packing" class="form-control form-control-sm rounded-0"  required="required" value="<?php echo $packing;?>" />
+                  <input id="packing" name="total_capsules" class="form-control form-control-sm rounded-0"  required="required" value="<?php echo $total_capsules;?>" />
+                </div>
+
+                <div class="col-lg-3 col-md-3 col-sm-4 col-xs-10">
+                  <div class="form-group">
+                    <label>Expire Date</label>
+                    <div class="input-group date" 
+                      id="expire_date" 
+                      data-target-input="nearest">
+                      <input type="text" class="form-control form-control-sm rounded-0 datetimepicker-input" data-target="#expire_date" value="<?= $medicine->expire_date ?>" name="expire_date" required="required" data-toggle="datetimepicker" autocomplete="off"/>
+                      <div class="input-group-append" 
+                        data-target="#expire_date" 
+                        data-toggle="datetimepicker">
+                        <div class="input-group-text">
+                          <i class="fa fa-calendar"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="col-lg-1 col-md-2 col-sm-4 col-xs-12">
@@ -139,11 +172,16 @@ include './config/sidebar.php';?>
 
   <?php include './config/site_js_links.php'; ?>
   <?php include './config/data_tables_js.php'; ?>
+<script src="plugins/moment/moment.min.js"></script>
+<script src="plugins/daterangepicker/daterangepicker.js"></script>
+<script src="plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
   <script>
     showMenuSelected("#mnu_medicines", "#mi_medicine_details");
 
     var message = '<?php echo $message;?>';
-
+    $('#expire_date').datetimepicker({
+      format:"L"
+    });
     if(message !== '') {
       showCustomMessage(message);
     }

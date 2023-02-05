@@ -3,17 +3,15 @@
 
   	$medicineId = $_GET['medicine_id'];
 
-  	$query = "SELECT `id`, `packing` from `medicine_details` 
-  	where `medicine_id` = $medicineId;";
-
-  	$packings = '<option value="">Select Packing</option>';
+  	$query = "SELECT `id`,`total_capsules` from `medicine_details` 
+  	where `id` = $medicineId;";
 
   	try {
   		$stmt = $con->prepare($query);
   		$stmt->execute();
 
   		while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-  			 $packings = $packings.'<option value="'.$row['id'].'">'.$row['packing'].'</option>';
+			$total_capsules = intval($row['total_capsules']);
   		}
 
   	} catch(PDOException $ex) {
@@ -21,5 +19,5 @@
   		exit;
   	}
 
-  	echo $packings;
+  	echo $total_capsules;
 ?>

@@ -12,7 +12,7 @@
   <!-- Right navbar links -->
   <ul class="navbar-nav ml-auto">
     <li class="nav-item">
-    <div class="login-user text-light font-weight-bolder">Have a nice day!, <?= $_SESSION['display_name'] ?>!</div>  
+    <div class="login-user text-light font-weight-bolder">Hi!, <?= $_SESSION['display_name'] ?>!</div>  
     </li>
   </ul>
 </nav>

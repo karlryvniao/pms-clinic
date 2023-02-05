@@ -13,12 +13,15 @@ if(isset($_POST['submit'])) {
   $weight = $_POST['weight'];
   $disease = $_POST['disease'];
 
-  $medicineDetailIds = $_POST['medicineDetailIds'];
 
   $quantities = $_POST['quantities'];
-  $dosages = $_POST['dosages'];
 
   $visitDateArr = explode("/", $visitDate);
+
+  $medicineCapsulesLeft = $_POST['medicineCapsulesLeft'];
+  $medicineCapsulesQty = $_POST['medicineCapsulesQty'];
+  //Medicine IDs to be updated
+  $medicineIdsToUpdate = array_keys($medicineCapsulesQty);
   
   $visitDate = $visitDateArr[2].'-'.$visitDateArr[0].'-'.$visitDateArr[1];
 
@@ -34,7 +37,7 @@ if(isset($_POST['submit'])) {
 
       //first to store a row in patient visit
 
-     $queryVisit = "INSERT INTO `patient_visits`(`visit_date`, 
+    $queryVisit = "INSERT INTO `patient_visits`(`visit_date`, 
     `next_visit_date`, `bp`, `weight`, `disease`, `patient_id`) 
     VALUES('$visitDate', 
     nullif('$nextVisitDate', ''), 
@@ -44,23 +47,22 @@ if(isset($_POST['submit'])) {
 
     $lastInsertId = $con->lastInsertId();//latest patient visit id
 
-//now to store data in medication history
-    $size = sizeof($medicineDetailIds);
-    $curMedicineDetailId = 0;
-    $curQuantity = 0;
-    $curDosage = 0;
+    foreach ($medicineIdsToUpdate as $medId) {
+      $totalLeft = $medicineCapsulesLeft[$medId];
+      $capsuleQuantity = $medicineCapsulesQty[$medId];
 
-    for($i = 0; $i < $size; $i++) {
-      $curMedicineDetailId = $medicineDetailIds[$i];
-      $curQuantity = $quantities[$i];
-      $curDosage = $dosages[$i];
+      $queryMedicationHistory = "INSERT INTO `patient_medication_history`(
+      `patient_visit_id`, `medicine_detail_id`, `quantity`)
+      VALUES($lastInsertId, $medId, $capsuleQuantity);";
 
-      $qeuryMedicationHistory = "INSERT INTO `patient_medication_history`(
-      `patient_visit_id`,
-      `medicine_details_id`, `quantity`, `dosage`)
-      VALUES($lastInsertId, $curMedicineDetailId, $curQuantity, $curDosage);";
-      $stmtDetails = $con->prepare($qeuryMedicationHistory);
+      $stmtDetails = $con->prepare($queryMedicationHistory);
       $stmtDetails->execute();
+
+      $updateMedicineQuery = "UPDATE `medicine_details` SET `total_capsules` = $totalLeft
+      WHERE `medicine_details`.`id` = $medId";
+
+      $stmtMedicine = $con->prepare($updateMedicineQuery);
+      $stmtMedicine->execute();
     }
 
     $con->commit();
@@ -135,8 +137,8 @@ include './config/sidebar.php';?>
                   <select id="patient" name="patient" class="form-control form-control-sm rounded-0" 
                   required="required">
                   <?php echo $patients;?>
-                </select>
-              </div>
+                  </select>
+                </div>
 
 
               <div class="col-lg-3 col-md-3 col-sm-4 col-xs-10">
@@ -157,21 +159,7 @@ include './config/sidebar.php';?>
           
 
 
-          <div class="col-lg-3 col-md-3 col-sm-4 col-xs-10">
-            <div class="form-group">
-              <label>Next Visit Date</label>
-              <div class="input-group date" 
-              id="next_visit_date" 
-              data-target-input="nearest">
-              <input type="text" class="form-control form-control-sm rounded-0 datetimepicker-input" data-target="#next_visit_date" name="next_visit_date" data-toggle="datetimepicker" autocomplete="off"/>
-              <div class="input-group-append" 
-              data-target="#next_visit_date" 
-              data-toggle="datetimepicker">
-              <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-            </div>
-          </div>
-        </div>
-      </div>
+          
 
       <div class="clearfix">&nbsp;</div>
 
@@ -204,21 +192,13 @@ include './config/sidebar.php';?>
       </select>
     </div>
 
-    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-      <label>Select Packing</label>
-      <select id="packing" class="form-control form-control-sm rounded-0">
-
-      </select>
+    <div  class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+     <p id="packing" value="">No medicine selected</p>
     </div>
 
     <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
       <label>Quantity</label>
-      <input id="quantity" class="form-control form-control-sm rounded-0" />
-    </div>
-
-    <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
-      <label>Dosage</label>
-      <input id="dosage" class="form-control form-control-sm rounded-0" />
+      <input id="quantity" type="number" min="1" max="10" class="form-control form-control-sm rounded-0" />
     </div>
 
     <div class="col-lg-1 col-md-1 col-sm-6 col-xs-12">
@@ -245,9 +225,7 @@ include './config/sidebar.php';?>
         <tr>
           <th>S.No</th>
           <th>Medicine Name</th>
-          <th>Packing</th>
           <th>QTY</th>
-          <th>Dosage</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -256,6 +234,9 @@ include './config/sidebar.php';?>
 
       </tbody>
     </table>
+  </div>
+  <div id="medicineInputs">
+    <!-- Hidden inputs -->
   </div>
 
   <div class="clearfix">&nbsp;</div>
@@ -305,6 +286,36 @@ if(isset($_GET['message'])) {
     showCustomMessage(message);
   }
 
+  var medicineCountCache = {
+    decrementCount: function(medID, newVal) {
+      let {totalQuantity, totalCapsules} = this[medID];
+      newVal = parseInt(newVal);
+
+      if(isNaN(newVal) || newVal < 0){
+        showCustomMessage("Please enter a number and should a positve value");
+        return false;
+      } 
+      
+      if(newVal > totalCapsules){
+
+        showCustomMessage("Not enough stocks");
+        return false;
+      }
+      
+      this[medID].totalQuantity = totalQuantity + newVal;
+      this[medID].totalCapsules = totalCapsules - newVal;
+      console.log(`decrementCount ${this[medID].totalQuantity} ${this[medID].totalCapsules}`);
+      return true;
+    },
+    incrementCount: function(medID, newVal) {
+      let {totalQuantity, totalCapsules} = this[medID];
+      newVal = parseInt(newVal);
+      this[medID].totalQuantity = totalQuantity - newVal;
+      this[medID].totalCapsules = totalCapsules + newVal;
+      console.log(`incrementCount ${this[medID].totalQuantity} ${this[medID].totalCapsules}`);
+
+    }
+  };
 
   $(document).ready(function() {
     
@@ -318,53 +329,79 @@ if(isset($_GET['message'])) {
     $("#medicine").change(function() {
 
       // var medicineId = $("#medicine").val();
-      var medicineId = $(this).val();
-
+      let medicineId = $(this).val();
+      const htmlText = `Total left: `;
+      const packing = $("#packing");
       if(medicineId !== '') {
-        $.ajax({
-          url: "ajax/get_packings.php",
-          type: 'GET', 
-          data: {
-            'medicine_id': medicineId
-          },
-          cache:false,
-          async:false,
-          success: function (data, status, xhr) {
-            $("#packing").html(data);
-          },
-          error: function (jqXhr, textStatus, errorMessage) {
-            showCustomMessage(errorMessage);
-          }
-        });
+        if(medicineId in medicineCountCache){
+            packing.attr('value', medicineCountCache[medicineId].totalCapsules);
+            packing.html(htmlText + medicineCountCache[medicineId].totalCapsules);
+        }
+        else{
+            $.ajax({
+              url: "ajax/get_packings.php",
+              type: 'GET', 
+              data: {
+                'medicine_id': medicineId
+              },
+              cache:false,
+              async:false,
+              success: function (data, status, xhr) {
+                packing.attr('value', data);
+                packing.html(htmlText + data);
+                medicineCountCache[medicineId] = {totalQuantity: 0, totalCapsules: parseInt(data)};
+              },
+              error: function (jqXhr, textStatus, errorMessage) {
+                showCustomMessage(errorMessage);
+              }
+            });
+        }
+        
+      }
+      else{
+        packing.attr("value", "");
+        packing.html("No medicine selected");
       }
     });
 
 
     $("#add_to_list").click(function() {
-      var medicineId = $("#medicine").val();
+      let medicineId = $("#medicine").val();
+     
+      if(medicineId === ''){
+        showCustomMessage('Please select a medicine');
+        return;
+      }
       var medicineName = $("#medicine option:selected").text();
       
-      var medicineDetailId = $("#packing").val();
-      var packing = $("#packing option:selected").text();
-
       var quantity = $("#quantity").val().trim();
-      var dosage = $("#dosage").val().trim();
+
+      if(medicineCountCache.decrementCount(medicineId, quantity) === false){
+        return;
+      }
 
       var oldData = $("#current_medicines_list").html();
 
-      if(medicineName !== '' && packing !== '' && quantity !== '' && dosage !== '') {
-        var inputs = '';
-        inputs = inputs + '<input type="hidden" name="medicineDetailIds[]" value="'+medicineDetailId+'" />';
-        inputs = inputs + '<input type="hidden" name="quantities[]" value="'+quantity+'" />';
-        inputs = inputs + '<input type="hidden" name="dosages[]" value="'+dosage+'" />';
+      if(medicineName !== '' && packing !== '' && quantity !== '') {
+        
+        
+        // inputs = inputs + '<input type="hidden" name="quantities[]" value="'+quantity+'" />';
+        // if($("input[]"))
+        const medCapsulesLeftQuery = $(`[name="medicineCapsulesLeft[${medicineId}]"]`);
+        const medCapsulesQtyQuery = $(`[name="medicineCapsulesQty[${medicineId}]"]`);
+        if(medCapsulesLeftQuery.length > 0 && medCapsulesQtyQuery.length > 0){
+          medCapsulesLeftQuery.val(medicineCountCache[medicineId].totalCapsules);
+          medCapsulesQtyQuery.val(medicineCountCache[medicineId].totalQuantity);
+        }else{
+          const input1 = `<input type="hidden" name="medicineCapsulesLeft[${medicineId}]" value="${medicineCountCache[medicineId].totalCapsules}" /> `;
+          const input2 = `<input type="hidden" name="medicineCapsulesQty[${medicineId}]" value="${medicineCountCache[medicineId].totalQuantity}" />`;
+          $("#medicineInputs").append(input1 + input2);
+        }
 
-
-        var tr = '<tr>';
+        var tr = `<tr medid=${medicineId} quantity=${quantity}>`;
         tr = tr + '<td class="px-2 py-1 align-middle">'+serial+'</td>';
         tr = tr + '<td class="px-2 py-1 align-middle">'+medicineName+'</td>';
-        tr = tr + '<td class="px-2 py-1 align-middle">'+packing+'</td>';
         tr = tr + '<td class="px-2 py-1 align-middle">'+quantity+'</td>';
-        tr = tr + '<td class="px-2 py-1 align-middle">'+dosage + inputs +'</td>';
 
         tr = tr + '<td class="px-2 py-1 align-middle text-center"><button type="button" class="btn btn-outline-danger btn-sm rounded-0" onclick="deleteCurrentRow(this);"><i class="fa fa-times"></i></button></td>';
         tr = tr + '</tr>';
@@ -374,9 +411,11 @@ if(isset($_GET['message'])) {
         $("#current_medicines_list").html(oldData);
 
         $("#medicine").val('');
-        $("#packing").val('');
+
+        $("#packing").attr('value', '');
+        $("#packing").html('No medicine selected');
+
         $("#quantity").val('');
-        $("#dosage").val('');
 
       } else {
         showCustomMessage('Please fill all fields.');
@@ -387,10 +426,23 @@ if(isset($_GET['message'])) {
   });
 
   function deleteCurrentRow(obj) {
-
+    const parent = obj.parentNode.parentNode;
+    const medId = parent.getAttribute('medid');
+    const quantity = parent.getAttribute('quantity');
     var rowIndex = obj.parentNode.parentNode.rowIndex;
-    
+    medicineCountCache.incrementCount(medId, quantity);
     document.getElementById("medication_list").deleteRow(rowIndex);
+
+    const medCapsulesLeftQuery = $(`[name="medicineCapsulesLeft[${medId}]"]`);
+    const medCapsulesQtyQuery = $(`[name="medicineCapsulesQty[${medId}]"]`);
+    if(medicineCountCache[medId].totalQuantity === 0){
+      medCapsulesLeftQuery.remove();
+      medCapsulesQtyQuery.remove();
+    }
+    else{
+      medCapsulesLeftQuery.val(medicineCountCache[medId].totalCapsules);
+      medCapsulesQtyQuery.val(medicineCountCache[medId].totalQuantity);
+    }
   }
 </script>
 </body>

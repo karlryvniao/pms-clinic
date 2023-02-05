@@ -34,7 +34,7 @@ function getGender($gender = '') {
 
 function getMedicines($con, $medicineId = 0) {
 
-	$query = "select `id`, `medicine_name` from `medicines` 
+	$query = "select `id`, `medicine_name` from `medicine_details` 
 	order by `medicine_name` asc;";
 
 	$stmt = $con->prepare($query);
@@ -57,6 +57,37 @@ function getMedicines($con, $medicineId = 0) {
 		$data = $data.'<option value="'.$row['id'].'">'.$row['medicine_name'].'</option>';
 		}
 	}
+
+	return $data;
+	
+}
+
+function getMedicine($con, $medicineId = 0) {
+
+	$query = "SELECT `id`, `medicine_name`, date_format(`expire_date`, '%m/%d/%Y') as `expire_date` FROM `medicine_details` 
+	WHERE `id` = $medicineId";
+
+	$stmt = $con->prepare($query);
+	try {
+		$stmt->execute();
+
+	} catch(PDOException $ex) {
+		echo $ex->getTraceAsString();
+		echo $ex->getMessage();
+		exit;
+	}
+
+	$data = $stmt->fetch(PDO::FETCH_OBJ);
+	// $data = '<option value="">Select Medicine</option>';
+
+	// while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+	// 	if($medicineId == $row['id']) {
+	// 		$data = $data.'<option selected="selected" value="'.$row['id'].'">'.$row['medicine_name'].'</option>';
+
+	// 	} else {
+	// 	$data = $data.'<option value="'.$row['id'].'">'.$row['medicine_name'].'</option>';
+	// 	}
+	// }
 
 	return $data;
 	
@@ -107,5 +138,23 @@ data-target="#'.$dateId.'" name="'.$dateId.'" id="'.$dateId.'" required="require
           </div>';
 
           return $d;
+}
+
+
+function makeTitle($string, $delim){
+	$words = explode($delim, $string);
+	$new_words = array();
+	foreach($words as $word){
+		array_push($new_words, ucwords($word));
+	}
+	return implode(" ", $new_words);
+}
+
+function formatDateInsert($date){
+	if($date == ''){
+		return "0000-00-00";
+	}
+	$dateArr = explode('/', $date);
+	return $dateArr[2].'-'.$dateArr[0].'-'.$dateArr[1];
 }
 ?>

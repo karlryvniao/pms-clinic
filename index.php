@@ -43,6 +43,7 @@ try {
 		
 	}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,6 +57,20 @@ try {
     <!---we had linked our css file----->
        <!---we had linked our css file----->
 </head>
+
+<style>
+    .imageHolder img {
+        object-fit: cover;
+    }
+
+    .navbar {
+        background: #5C0F0B;
+    }
+
+    .footer {
+        background: #5C0F0B;
+    }
+</style>
 <body>
 <nav class="sticky">
     <div class="full-page">
@@ -68,7 +83,7 @@ try {
             </div>
             <nav>
                 <ul id='MenuItems'>
-                    <li><a href='contact.php'>Contact</a></li>
+                    <!--<li><a href='contact.php'>Contact</a></li>-->
                     <li class="loginHolder">
         <a href="#myModal" rel="facebox" class="roundedBtn_processed" data-toggle="modal" style="background-color: #6B1500" onclick="return false;">
           Log in
@@ -78,7 +93,7 @@ try {
             </nav>  
         </div>
         </nav>
-        
+<br><br><br>
         <div class="container site_full_width">
         <div id="wrap">
           
@@ -124,9 +139,9 @@ try {
         </div>
 				</form>
 			</div>
-			<div class="modal-footer">
+			<!--<div class="modal-footer">
 				<a href="#">Forgot Password?</a>
-			</div>
+			</div>-->
 		</div>
 	</div>
 </div>     
@@ -162,7 +177,7 @@ try {
         <div id="dotsContainer"></div>
     </div>
 
-  <div class="container-lb-1">
+ <!-- <div class="container-lb-1">
   <div class="row-1">
    <div class="block">
    <div class="imgCrop" style="background-image: url('images/clinic_1.jpg')"></div>
@@ -200,7 +215,7 @@ try {
 
           <p>We envision the University of Batangas to be a center of excellence committed to serve the broader community through quality education.</p>
 
-        </div>
+        </div>-->
         
             </div>
 
