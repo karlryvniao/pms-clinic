@@ -80,6 +80,7 @@ if (isset($_POST['save_Patient'])) {
 
   $hiddenId = $_POST['patient_id'];
 
+  $student_number = trim($_POST['student_number']);
   $patientName = trim($_POST['patient_name']);
   $address = trim($_POST['address']);
   $course = trim($_POST['course']);
@@ -124,11 +125,12 @@ if (isset($_POST['save_Patient'])) {
 
 
   if (
-    $patientName != '' && $address != '' &&
+    $student_number != '' && $patientName != '' && $address != '' &&
     $course != '' && $dateBirth != '' && $phoneNumber != '' && $gender != '' && $complaint != ''
   ) {
     $query = "update `patients` 
-      set `patient_name` = '$patientName', 
+      set `student_number` = '$student_number',
+      `patient_name` = '$patientName', 
       `address` = '$address', 
       `course` = '$course', 
       `date_of_birth` = '$dateBirth', 
@@ -193,6 +195,7 @@ if (isset($_POST['save_Patient'])) {
 
   <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
   <title>Update Pateint Details - Clinic's Patient Management System in PHP</title>
+  <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
 
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
@@ -240,6 +243,11 @@ include './config/sidebar.php';?>
             value="<?php echo $row['immunization_id'];?>">
           
             <div class="row">
+              <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
+                                <label>Student Number</label>
+                                <input type="number" name="student_number" id="student_number" required="required"
+                                       class="form-control form-control-sm rounded-0"/>
+                            </div>
               <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
               <label>Patient Name</label>
               <input type="text" id="patient_name" name="patient_name" required="required"

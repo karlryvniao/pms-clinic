@@ -8,13 +8,15 @@ if(isset($_POST['submit'])) {
 
   $patientId = $_POST['patient'];
   $visitDate = $_POST['visit_date'];
-  $nextVisitDate = $_POST['next_visit_date'];
   $bp = $_POST['bp'];
+  $temp = $_POST['temp'];
+  $pr = $_POST['pr'];
   $weight = $_POST['weight'];
+  $height = $_POST['height'];
+  $iden = $_POST['iden'];
   $disease = $_POST['disease'];
+  $allergy = $_POST['allergy'];
 
-
-  $quantities = $_POST['quantities'];
 
   $visitDateArr = explode("/", $visitDate);
 
@@ -25,23 +27,18 @@ if(isset($_POST['submit'])) {
   
   $visitDate = $visitDateArr[2].'-'.$visitDateArr[0].'-'.$visitDateArr[1];
 
-  if($nextVisitDate != '') {
-    $nextVisitDateArr = explode("/", $nextVisitDate);
-    $nextVisitDate = $nextVisitDateArr[2].'-'.$nextVisitDateArr[0].'-'.$nextVisitDateArr[1];
-  }
 
 
-  try {
+
 
     $con->beginTransaction();
 
       //first to store a row in patient visit
 
-    $queryVisit = "INSERT INTO `patient_visits`(`visit_date`, 
-    `next_visit_date`, `bp`, `weight`, `disease`, `patient_id`) 
-    VALUES('$visitDate', 
-    nullif('$nextVisitDate', ''), 
-    '$bp', '$weight', '$disease', $patientId);";
+    $queryVisit = "INSERT INTO `patient_visits`(`visit_date`, `bp`, `temp`, `pr`, `weight`, `height`, `iden`, `disease`, `allergy`, `patient_id`) 
+    VALUES('$visitDate',
+    '$bp', '$temp', '$pr', '$weight', '$height', '$iden', '$disease', '$allergy', $patientId);";
+    
     $stmtVisit = $con->prepare($queryVisit);
     $stmtVisit->execute();
 
@@ -69,21 +66,20 @@ if(isset($_POST['submit'])) {
 
     $message = 'Patient Medication stored successfully.';
 
-  }catch(PDOException $ex) {
-    $con->rollback();
-
-    echo $ex->getTraceAsString();
-    echo $ex->getMessage();
-    exit;
-  }
+ 
+   
+  
 
   header("location:congratulation.php?goto_page=new_prescription.php&message=$message");
   exit;
 }
 $patients = getPatients($con);
+$employee = getEmployee($con);
 $medicines = getMedicines($con);
 
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,6 +88,7 @@ $medicines = getMedicines($con);
  <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
  <link rel="stylesheet" type='' href="plugins/admincss/admin.css" />
  <title>New Prescription - Clinic's Patient Management System in PHP</title>
+ <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
 
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
@@ -137,6 +134,8 @@ include './config/sidebar.php';?>
                   <select id="patient" name="patient" class="form-control form-control-sm rounded-0" 
                   required="required">
                   <?php echo $patients;?>
+                  <?php echo $employee;?>
+
                   </select>
                 </div>
 
@@ -161,21 +160,61 @@ include './config/sidebar.php';?>
 
           
 
-      <div class="clearfix">&nbsp;</div>
+          
 
       <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
-        <label>BP</label>
+        <label>Blood Pressure</label>
         <input id="bp" class="form-control form-control-sm rounded-0" name="bp" required="required" />
       </div>
-      
       <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
-        <label>Weight</label>
-        <input id="weight" name="weight" class="form-control form-control-sm rounded-0" required="required" />
+        <label>Temperature</label>
+        <input id="temp" class="form-control form-control-sm rounded-0" name="temp" required="required" />
       </div>
+      <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
+        <label>Pulse rate</label>
+        <input id="pr" class="form-control form-control-sm rounded-0" name="pr" required="required" />
+      </div>
+      <div class="col-md-12"><hr></div>
+
+
+      <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
+		<label for="weight">Weight (kg):</label>
+		<input type="number" id="weight" name="weight" required><br>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
+		<label for="height">Height (cm):</label>
+		<input type="number" id="height" name="height" required><br>
+    </div>
+
+    <div class="col-lg-1 col-md-1 col-sm-6 col-xs-12">
+    <label>&nbsp;</label>
+		<input type="button" class="btn btn-primary btn-sm btn-flat btn-block" value="Calculate" onclick="calculateBMI()" required="required" />
+    </div>	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;
+
+    
+
+    <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
+		<label for="bmi">Body Mass Index:</label>
+		<input type="text" id="bmi" name="bmi" readonly>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
+		<label for="identification">Identification:</label>
+		<input type="text" id="iden" name="iden" readonly>
+</div>
+
+<div class="col-md-12"><hr></div>
+
+
 
       <div class="col-lg-8 col-md-8 col-sm-6 col-xs-12">
         <label>Disease</label>
         <input id="disease" required="required" name="disease" class="form-control form-control-sm rounded-0" />
+      </div>
+      <div class="col-lg-8 col-md-8 col-sm-6 col-xs-12">
+      <label>Allergy&nbsp<text style="font-size:.8rem">(optional)</text></label>
+        <input id="allergy" name="allergy" class="form-control form-control-sm rounded-0" />
       </div>
 
 
@@ -223,7 +262,7 @@ include './config/sidebar.php';?>
       </colgroup>
       <thead class="bg-primary">
         <tr>
-          <th>S.No</th>
+          <th>No.</th>
           <th>Medicine Name</th>
           <th>QTY</th>
           <th>Action</th>
@@ -321,7 +360,7 @@ if(isset($_GET['message'])) {
     
     $('#medication_list').find('td').addClass("px-2 py-1 align-middle")
     $('#medication_list').find('th').addClass("p-1 align-middle")
-    $('#visit_date, #next_visit_date').datetimepicker({
+    $('#visit_date').datetimepicker({
       format: 'L'
     });
 
@@ -445,5 +484,24 @@ if(isset($_GET['message'])) {
     }
   }
 </script>
+
+<script>
+		function calculateBMI() {
+			var weight = document.getElementById("weight").value;
+			var height = document.getElementById("height").value;
+			var bmi = weight / ((height/100) ** 2);
+			document.getElementById("bmi").value = bmi.toFixed(2);
+
+			if (bmi < 18.5) {
+				document.getElementById("iden").value = "Underweight";
+			} else if (bmi >= 18.5 && bmi < 25) {
+				document.getElementById("iden").value = "Normal weight";
+			} else if (bmi >= 25 && bmi < 30) {
+				document.getElementById("iden").value = "Overweight";
+			} else {
+				document.getElementById("iden").value = "Obese";
+			}
+		}
+	</script>
 </body>
 </html>

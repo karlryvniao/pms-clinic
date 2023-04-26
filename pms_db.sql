@@ -59,7 +59,7 @@ CREATE TABLE `medicine_details` (
   -- `medicine_id` int(11) NOT NULL,
   `medicine_name` varchar(60) NOT NULL,
   `total_capsules` INT NOT NULL,
-  `expiration` DATE DEFAULT NULL
+  `expire_date` DATE DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -286,9 +286,12 @@ INSERT INTO `patient_medication_history` (`id`, `patient_visit_id`, `medicine_de
 CREATE TABLE `patient_visits` (
   `id` int(11) NOT NULL,
   `visit_date` date NOT NULL,
-  `next_visit_date` date DEFAULT NULL,
   `bp` varchar(23) NOT NULL,
+  `temp` varchar (23) NOT NULL,
+  `pr` varchar(23) NOT NULL,
   `weight` varchar(12) NOT NULL,
+  `height` varchar(15) NOT NULL,
+  `iden` varchar(50) NOT NULL,
   `disease` varchar(30) NOT NULL,
   `patient_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -297,7 +300,7 @@ CREATE TABLE `patient_visits` (
 -- Dumping data for table `patient_visits`
 --
 
-INSERT INTO `patient_visits` (`id`, `visit_date`, `next_visit_date`, `bp`, `weight`, `disease`, `patient_id`) VALUES
+INSERT INTO `patient_visits` (`id`, `visit_date`, `bp`, `temp`, `pr` `weight`, `height`, `iden`, `disease`, `patient_id`) VALUES
 (1, '2022-06-28', '2022-06-30', '120/80', '65 kg.', 'Wounded Arm', 1),
 (2, '2022-06-30', '2022-07-02', '120/80', '65 kg.', 'Rhinovirus', 1);
 

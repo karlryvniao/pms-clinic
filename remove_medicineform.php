@@ -38,7 +38,7 @@ if(isset($_POST['form_remove'])) {
         }
 
 }
-header("Location:congratulation.php?goto_page=forms.php&message=$message");
+header("Location:congratulation.php?goto_page=medicine_details.php&message=$message");
 exit;
 }
 

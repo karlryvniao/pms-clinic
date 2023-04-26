@@ -2,59 +2,49 @@
 include './config/connection.php';
 include './common_service/common_functions.php';
 
-$message = '';
 
-if(isset($_POST['submit'])) {
-  $medicineName = $_POST['medicine_name'];
-  $total_capsules = $_POST['total_capsules'];
-  $expire_date = $_POST['expire_date'];
-
-  $expireDateArr = explode("/", $expire_date);
-
-  $cleanExpireDate = $expireDateArr[2] . '-' . $expireDateArr[0] . '-' . $expireDateArr[1];
-  $query = "INSERT into `medicine_details` (`medicine_name`, `total_capsules`, `expire_date`) values ('$medicineName', '$total_capsules', '$cleanExpireDate');";
-  try {
-
-    $con->beginTransaction();
+define('CORRECT_PIN', '1111');
+$entered_pin = $_POST['pin'];
+if(isset($_POST['submit'])) { 
+   if ($entered_pin === CORRECT_PIN) {
+    $medicineName = $_POST['medicine_name'];
+    $total_capsules = $_POST['total_capsules'];
+    $expire_date = $_POST['expire_date'];
+    $displayName = $_POST['display_name'];
     
-    $stmtDetails = $con->prepare($query);
-    $stmtDetails->execute();
 
-    $con->commit();
+    $expireDateArr = explode("/", $expire_date);
 
-    $message = 'Medicine added successfully.';
+    $cleanExpireDate = $expireDateArr[2] . '-' . $expireDateArr[0] . '-' . $expireDateArr[1];
+    $query = "INSERT into `medicine_details` (`medicine_name`, `total_capsules`, `expire_date`, `display_name`) values ('$medicineName', '$total_capsules', '$cleanExpireDate', '$displayName');";
+   
 
-  } catch(PDOException $ex) {
+      $con->beginTransaction();
+      
+      $stmtDetails = $con->prepare($query);
+      $stmtDetails->execute();
 
-   $con->rollback();
-
-   echo $ex->getMessage();
-   echo $ex->getTraceAsString();
-   exit;
- }
- header("location:congratulation.php?goto_page=medicine_details.php&message=$message");
- exit;
+      $con->commit();
+      echo "<script>alert('Medicine added successfully.');</script>";
+  }else{
+    $message = "Invalid Pin!, Please Try Again!";
+  echo "<script type='text/javascript'>alert('$message');</script>";
+  }
 }
 
+
+  
 
 // $medicines = getMedicines($con);
 
 $query = "select `md`.`medicine_name`, 
-`md`.`id`, `md`.`total_capsules`, `md`.`expire_date`
+`md`.`id`, `md`.`total_capsules`, `md`.`expire_date`, `md`.`display_name`
 from `medicine_details` as `md` 
 order by `md`.`id` asc;";
 
- try {
   
     $stmtDetails = $con->prepare($query);
     $stmtDetails->execute();   
-
-  } catch(PDOException $ex) {
-
-   echo $ex->getMessage();
-   echo $ex->getTraceAsString();
-   exit;
- }
 
 ?>
 <!DOCTYPE html>
@@ -65,6 +55,7 @@ order by `md`.`id` asc;";
  <link rel="stylesheet" type='' href="plugins/admincss/admin.css" />
  <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
  <title>University of Batangas in Lipa Medicine Details</title>
+ <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
 
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
@@ -116,7 +107,7 @@ include './config/sidebar.php';?>
                 </div>
 
                 <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
-                  <label>Total Capsules</label>
+                  <label>Total Drugs</label>
                   <input id="total_capsules" name="total_capsules" class="form-control form-control-sm rounded-0"  required="required" />
                 </div>
 
@@ -137,10 +128,38 @@ include './config/sidebar.php';?>
                     </div>
                   </div>
                 </div>
+                <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+                  <label>Nurse</label>
+                  <input type="text" id="display_name" name="display_name" value="<?= $_SESSION['display_name'] ?>" class="form-control form-control-sm rounded-0"  required="required" readonly/>
+                </div>
                 <div class="col-lg-1 col-md-2 col-sm-4 col-xs-12">
                   <label>&nbsp;</label>
-                  <button type="submit" id="submit" name="submit" 
-                  class="btn btn-primary btn-sm btn-flat btn-block">Save</button>
+                  <button type="#" id="#" name="#" data-toggle="modal" data-target="#exampleModal"
+                  class="btn btn-primary btn-sm btn-flat btn-block">Submit</button>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+      <h5 class="modal-title" id="exampleModalLabel">Enter Pin</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <input input type="password" id="pin" name="pin" class="form-control form-control-sm rounded-0"  required="required" maxlength="4"/>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="submit" id="saveButton" name="submit" 
+                  class="btn btn-primary" onclick="checkPin()">Save</button>
+      </div>
+    </div>
+  </div>
                 </div>
               </div>
             </form>
@@ -175,22 +194,30 @@ include './config/sidebar.php';?>
               class="table table-striped dataTable table-bordered dtr-inline" 
                role="grid" aria-describedby="medicine_details_info">
                 <colgroup>
+                  <col width="5%">
+                  <col width="20%">
+                  <col width="15%">
+                  <col width="15%">
                   <col width="10%">
-                  <col width="50%">
-                  <col width="30%">
+                  <col width="12%">
+                  <col width="15%">
                   <col width="10%">
                 </colgroup>
                 <thead>
                   <tr>
                     <th>S.No</th>
                     <th>Medicine Name</th>
-                    <th>Total Capsules</th>
+                    <th>Brand/Generic Name</th>
+                    <th>Medicine Type</th>
+                    <th>Quantity</th>
                     <th>Expiration Date</th>
+                    <th style="text-align:center;">Status</th>
+                    <th>Nurse</th>
                     <th>Action</th>
                   </tr>
                 </thead>
-
                 <tbody>
+                
                   <?php 
                   $serial = 0;
                   while($row =$stmtDetails->fetch(PDO::FETCH_ASSOC)){
@@ -200,17 +227,45 @@ include './config/sidebar.php';?>
                     <td class="text-center"><?php echo $serial; ?></td>
                     <td><?php echo $row['medicine_name'];?></td>
                     <td><?php echo $row['total_capsules'];?></td>
-                    <td><?= $row['expire_date'] ?></td>
+                    <td><?php echo $row['total_capsules'];?></td>
+                    <td><?php echo $row['total_capsules'];?></td>
+                    <td><?php echo $row['expire_date'];?></td>
+                    <td style="text-align:center;"><?php 
+                    $date_now = date("Y-m-d"); 
+                    $targetTimestamp = strtotime($date_now);
+                    $currentTimestamp = time();
+                    $secondsUntilTarget = $targetTimestamp - $currentTimestamp;
+                    
+                    
+                    $threshold = 90; // days
+
+                    $today = new DateTime();
+                    $expiration = new DateTime ($row['expire_date']);
+                    $diff = $today->diff($expiration);
+
+                    if ($date_now > $row['expire_date']) {
+                      echo '<b style="Color:white; border:1px solid #CD0404; border-radius:5px; background-color:#CD0404; padding:5px 10px;">Expired</b>';
+                    }
+                    elseif ($diff->days <= $threshold) {
+                      echo '<b style="Color:white; border:1px solid #FFBF00; border-radius:5px; background-color:#FFBF00;  padding:5px 10px;">Near Expiration</b>';
+                    }
+                    else {
+                      echo '<b style="Color:white; border:1px solid #1F8A70; border-radius:5px; background-color: #1F8A70;  padding:5px 10px; ">Good Condition</b>';
+                    } ?></td>
+
+                    <td><?php echo $row['display_name'];?></td>
+
                     <td class="text-center">
                       <a href="update_medicine_details.php?medicine_id=<?php echo $row['id'];?>&medicine_detail_id=<?php echo $row['id'];?>&total_capsules=<?php echo $row['total_capsules'];?>&expire_date=<?= $row['expire_date'] ?>" 
                       class = "btn btn-primary btn-sm btn-flat">
                       <i class="fa fa-edit"></i>
                       </a>
+                      
                       <button type="button" class="btn btn-danger btn-sm btn-flat" data-toggle="modal" data-target="#form_delete<?php echo $row['id']?>">
                                             <i class="fa fa-trash"></i>
                                         </button>
                     </td>
-                   
+          
                   </tr>
                   <!-- Modal -->
                   <div class="modal fade" id="form_delete<?php echo $row['id']?>" tabindex="-1" role="dialog" aria-hidden="true">
@@ -232,6 +287,7 @@ include './config/sidebar.php';?>
                                                     <input type="hidden" name="form_medicinename" value="<?php echo $row['medicine_name']?>"/>
                                                     <input type="hidden" name="form_totalcapsules" value="<?php echo $row['total_capsules']?>"/>
                                                     <input type="hidden" name="form_expiredate" value="<?php echo $row['expire_date']?>"/>
+                                                    <input type="hidden" name="form_displayName" value="<?php echo $row['display_name']?>"/>
                                                     <button type="submit" class="btn btn-danger" name="form_remove">Continue</button>
                                                 </form>
                                             </div>
@@ -288,5 +344,6 @@ if(isset($_GET['message'])) {
   });
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

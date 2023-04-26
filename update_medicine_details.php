@@ -62,7 +62,6 @@ $medicine = getMedicine($con, $medicineId);
 <head>
  <?php include './config/site_css_links.php';?>
  <?php include './config/data_tables_css.php';?>
- <title>Update Medicine Details - Clinic's Patient Management System in PHP</title>
 
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
@@ -117,7 +116,7 @@ include './config/sidebar.php';?>
                 </div>
 
                 <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
-                  <label>Packing</label>
+                  <label>Total Drugs</label>
                   <input id="packing" name="total_capsules" class="form-control form-control-sm rounded-0"  required="required" value="<?php echo $total_capsules;?>" />
                 </div>
 

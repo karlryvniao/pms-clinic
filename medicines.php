@@ -4,11 +4,12 @@ include './config/connection.php';
 $message = '';
 if(isset($_POST['save_medicine'])) {
   $message = '';
+  $description = trim($_POST['description']);
   $medicineName = trim($_POST['medicine_name']);
   $medicineName = ucwords(strtolower($medicineName));
   if($medicineName != '') {
-   $query = "INSERT INTO `medicines`(`medicine_name`)
-   VALUES('$medicineName');";
+   $query = "INSERT INTO `medicines`(`medicine_name`, `description`)
+   VALUES('$medicineName', '$description');";
    
    try {
 
@@ -36,7 +37,7 @@ exit;
 }
 
 try {
-  $query = "select `id`, `medicine_name` from `medicines` 
+  $query = "select `id`, `medicine_name`, `description` from `medicines` 
   order by `medicine_name` asc;";
   $stmt = $con->prepare($query);
   $stmt->execute();
@@ -55,6 +56,7 @@ try {
  
  <?php include './config/data_tables_css.php';?>
  <title>Medicines - Clinic's Patient Management System in PHP</title>
+ <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
   <!-- Site wrapper -->
@@ -94,6 +96,11 @@ include './config/sidebar.php';?>
                 <input type="text" id="medicine_name" name="medicine_name" required="required"
                 class="form-control form-control-sm rounded-0" />
               </div>
+              <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
+                <label>Description</label>
+                <input type="text" id="description" name="description" required="required"
+                class="form-control form-control-sm rounded-0" />
+              </div>
               <div class="col-lg-1 col-md-2 col-sm-2 col-xs-2">
                 <label>&nbsp;</label>
                 <button type="submit" id="save_medicine" 
@@ -127,7 +134,8 @@ include './config/sidebar.php';?>
           role="grid" aria-describedby="all_medicines_info">
           <colgroup>
             <col width="10%">
-            <col width="80%">
+            <col width="30%">
+            <col width="60%">
             <col width="10%">
           </colgroup>
 
@@ -135,6 +143,7 @@ include './config/sidebar.php';?>
             <tr>
              <th class="text-center">S.No</th>
              <th>Medicine Name</th>
+             <th>Description</th>
              <th class="text-center">Action</th>
            </tr>
          </thead>
@@ -148,6 +157,7 @@ include './config/sidebar.php';?>
            <tr>
              <td class="text-center"><?php echo $serial;?></td>
              <td><?php echo $row['medicine_name'];?></td>
+             <td><?php echo $row['description'];?></td>
              <td class="text-center">
               <a href="update_medicine.php?id=<?php echo $row['id'];?>" 
                class="btn btn-primary btn-sm btn-flat">

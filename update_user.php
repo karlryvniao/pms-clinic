@@ -77,6 +77,7 @@ header("Location:congratulation.php?goto_page=users.php&message=$message");
  <?php include './config/site_css_links.php';?>
 
  <title>Update User  Details - Clinic's Patient Management System in PHP</title>
+ <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
 
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">

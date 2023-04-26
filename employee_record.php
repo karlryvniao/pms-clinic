@@ -78,10 +78,10 @@ if(isset($_POST['sendMessageBtn'])) {
 }
 if (isset($_POST['save_Patient'])) {
     print_r($_POST);
-    $student_number = trim($_POST['student_number']);
+    $employeeNumber = trim($_POST['employee_number']);
     $patientName = trim($_POST['patient_name']);
     $address = trim($_POST['address']);
-    $course = trim($_POST['course']);
+    $department = trim($_POST['department']);
 
     $dateBirth = trim($_POST['date_of_birth']);
     $todays_time = $_POST['todays_time'];
@@ -124,10 +124,10 @@ if (isset($_POST['save_Patient'])) {
 
     $gender = $_POST['gender'];
     $complaint = trim($_POST['complaint']);
-    if ($student_number != '' && $patientName != '' && $address != '' &&
-        $course != '' && $dateBirth != '' && $phoneNumber != '' && $gender != '' && $complaint != '') {
-        $query = "INSERT INTO `patients`(`student_number`, `patient_name`, `address`, `course`, `date_of_birth`, todays_time, `phone_number`, `gender`, `complaint`)
-                    VALUES('$student_number', '$patientName', '$address', '$course', '$dateBirth', '$todays_time', '$phoneNumber', '$gender', '$complaint');";
+    if ($employeeNumber != '' && $patientName != '' && $address != '' &&
+        $department != '' && $dateBirth != '' && $phoneNumber != '' && $gender != '' && $complaint != '') {
+        $query = "INSERT INTO `employee_record`(`employee_number`, `patient_name`, `address`, `department`, `date_of_birth`, todays_time, `phone_number`, `gender`, `complaint`)
+                    VALUES('$employeeNumber', '$patientName', '$address', '$department', '$dateBirth', '$todays_time', '$phoneNumber', '$gender', '$complaint');";
         try {
 
             $con->beginTransaction();
@@ -189,9 +189,9 @@ if (isset($_POST['save_Patient'])) {
 
 try {
 
-    $query = "SELECT  patients.*, date_format(`date_of_birth`, '%d %b %Y') as `date_of_birth`, 
+    $query = "SELECT  employee_record.*, date_format(`date_of_birth`, '%d %b %Y') as `date_of_birth`, 
 `phone_number`, `gender`, `complaint`
-FROM `patients` order by `student_number` asc;";
+FROM `employee_record` order by `employee_number` asc;";
 
     $stmtPatient1 = $con->prepare($query);
     $stmtPatient1->execute();
@@ -229,7 +229,7 @@ FROM `patients` order by `student_number` asc;";
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1>Patients</h1>
+                        <h1>Employee Patients</h1>
                     </div>
                 </div>
             </div><!-- /.container-fluid -->
@@ -260,10 +260,10 @@ FROM `patients` order by `student_number` asc;";
                             <thead>
                             <tr>
                                 <th>No.</th>
-                                <th>Student No.</th>
+                                <th>Employees No.</th>
                                 <th>Patient Name</th>
                                 <th>Address</th>
-                                <th>Course</th>
+                                <th>Department</th>
                                 <th>Date Time</th>
                                 <th>Phone Number</th>
                                 <th>Gender</th>
@@ -280,21 +280,19 @@ FROM `patients` order by `student_number` asc;";
                                 ?>
                                 <tr>
                                     <td><?php echo $count; ?></td>
-                                    <td><?php echo $row['student_number'];?></td>
+                                    <td><?php echo $row['employee_number'];?></td>
                                     <td><?php echo $row['patient_name'];?></td>
                                     <td><?php echo $row['address'];?></td>
-                                    <td><?php echo $row['course'];?></td>
+                                    <td><?php echo $row['department'];?></td>
                                     <td><?php echo $row['date_of_birth'] .' '. date('h:i a',strtotime($row['todays_time']));?></td>
                                     <td><?php echo $row['phone_number'];?></td>
                                     <td><?php echo $row['gender'];?></td>
                                     <td><?php echo $row['complaint'];?></td>
                                     <td style="display: flex;">
-                                        <form action="" method="POST">
-                                            <input type="hidden" value="<?=$row['phone_number'];?>" name="messagePhoneNumber">
-                                            <input type="hidden" value="<?=$row['patient_name'];?>" name="messagePatientName">
-                                            <button type="submit" name="sendMessageBtn" class="btn btn-danger" title="Send emergency message"><i class="fa fa-paper-plane" aria-hidden="true"></i>
-                                            </button>
-                                        </form>
+                                    <a href="update_patient.php?id=<?php echo $row['id'];?>" class = "btn btn-primary btn-sm btn-flat">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                       
                                     </td>
 
                                 </tr>
@@ -336,7 +334,7 @@ FROM `patients` order by `student_number` asc;";
     <script src="plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
 
     <script>
-        showMenuSelected("#mnu_reports", "#mi_sms");
+        showMenuSelected("#mnu_record", "#mi_employee");
 
         var message = '<?php echo $message;?>';
 
@@ -416,6 +414,7 @@ FROM `patients` order by `student_number` asc;";
             }).buttons().container().appendTo('#all_patients_wrapper .col-md-6:eq(0)');
 
         });
+        
 
 
     </script>

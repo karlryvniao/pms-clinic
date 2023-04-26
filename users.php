@@ -94,8 +94,8 @@ try {
 
  
  <?php include './config/data_tables_css.php';?>
- <title>Users of University of Batangas in Lipa</title>
-
+ <title>Users - Clinic's Patient Management System in PHP</title>
+<link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
  <style>
   .user-img{
     width:3em;
@@ -233,7 +233,35 @@ include './config/sidebar.php';?>
                 <a href="update_user.php?user_id=<?php echo $row['id']; ?>" class="btn btn-primary btn-sm btn-flat">
                   <i class="fa fa-edit"></i> 
                 </a>
+                <button type="button" class="btn btn-danger btn-sm btn-flat" data-toggle="modal" data-target="#form_delete<?php echo $row['id']?>">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
               </td>
+              <!-- Modal -->
+              <div class="modal fade" id="form_delete<?php echo $row['id']?>" tabindex="-1" role="dialog" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Delete template</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete <?php echo $row['display_name']?>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                <form method="POST" action="remove_user.php">
+                                                    <input type="hidden" name="form_id" value="<?php echo $row['id']?>"/>
+                                                    <input type="hidden" name="form_profile_picture" value="<?php echo $row['profile_picture']?>"/>
+                                                    <input type="hidden" name="form_user_name" value="<?php echo $row['user_name']?>"/>
+                                                    <button type="submit" class="btn btn-danger" name="form_remove">Continue</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
          </tr>
        <?php } ?>
      </tbody>

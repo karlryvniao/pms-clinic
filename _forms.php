@@ -10,6 +10,7 @@ include './config/connection.php';
 <head>
  <?php include './config/site_css_links.php';?>
  <title>Dashboard - Clinic's Patient Management System in PHP</title>
+ <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
 <style>
   .dark-mode .bg-fuchsia, .dark-mode .bg-maroon {
     color: #fff!important;

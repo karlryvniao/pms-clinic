@@ -78,21 +78,10 @@ if(isset($_POST['sendMessageBtn'])) {
 }
 if (isset($_POST['save_Patient'])) {
     print_r($_POST);
-    $student_number = trim($_POST['student_number']);
+    $employee_number = trim($_POST['employee_number']);
     $patientName = trim($_POST['patient_name']);
     $address = trim($_POST['address']);
-    $course = trim($_POST['course']);
-
-    /** */
-    $bp = trim($_POST['bp']);
-    $temp = trim($_POST['temp']);
-    $pr = trim($_POST['pr']);
-    $weight = trim($_POST['weight']);
-    $height = trim($_POST['height']);
-    $iden = trim($_POST['iden']);
-    $disease = trim($_POST['disease']);
-    $allergy = trim($_POST['allergy']);
-
+    $department = trim($_POST['department']);
 
     $dateBirth = trim($_POST['date_of_birth']);
     $todays_time = $_POST['todays_time'];
@@ -104,11 +93,6 @@ if (isset($_POST['save_Patient'])) {
 
     $patientName = ucwords(strtolower($patientName));
     $address = ucwords(strtolower($address));
-
-    $medicineCapsulesLeft = trim($_POST['medicineCapsulesLeft']);
-  $medicineCapsulesQty = trim($_POST['medicineCapsulesQty']);
-  //Medicine IDs to be updated
-  $medicineIdsToUpdate = array_keys($medicineCapsulesQty);
     
     $past_medical_values = [];
 
@@ -134,19 +118,16 @@ if (isset($_POST['save_Patient'])) {
         array_push($immunization_values, formatDateInsert($_POST[$immunization_field] ?? '00/00/0000'));
     }
     $immunization_str = implode("', '" , $immunization_values);
-    
 
 
 
 
     $gender = $_POST['gender'];
     $complaint = trim($_POST['complaint']);
-    if ($student_number != '' && $patientName != '' && $address != '' &&
-        $course != '' && $dateBirth != '' && $phoneNumber != '' && $gender != '' && $complaint != '') {
-        $query = "INSERT INTO `patients`(`student_number`, `patient_name`, `address`, `course`, `date_of_birth`, todays_time, `phone_number`, `gender`,
-         `complaint`,  `bp`, `temp`, `pr`, `weight`, `height`, `iden`, `disease`, `allergy`)
-                    VALUES('$student_number', '$patientName', '$address', '$course', '$dateBirth', '$todays_time', '$phoneNumber', '$gender', '$complaint', 
-                    '$bp', '$temp', '$pr', '$weight', '$height', '$iden', '$disease', '$allergy');";
+    if ($employee_number != '' && $patientName != '' && $address != '' &&
+        $department != '' && $dateBirth != '' && $phoneNumber != '' && $gender != '' && $complaint != '') {
+        $query = "INSERT INTO `employee_record`(`employee_number`, `patient_name`, `address`, `department`, `date_of_birth`, todays_time, `phone_number`, `gender`, `complaint`)
+                    VALUES('$employee_number', '$patientName', '$address', '$department', '$dateBirth', '$todays_time', '$phoneNumber', '$gender', '$complaint');";
         try {
 
             $con->beginTransaction();
@@ -188,26 +169,6 @@ if (isset($_POST['save_Patient'])) {
                                     VALUES($latestPatientId, $latestPastMedicalID, $latestFamilyHistoryId, $latestImmunizationId)";
             $healthRecordStmt = $con->prepare($health_record_query);
             $healthRecordStmt->execute();
-
-            $lastInsertId = $con->lastInsertId();//latest patient visit id
-            
-            foreach ($medicineIdsToUpdate as $medId) {
-                $totalLeft = $medicineCapsulesLeft[$medId];
-                $capsuleQuantity = $medicineCapsulesQty[$medId];
-          
-                $queryMedicationHistory = "INSERT INTO `patient_medication_history`(
-                `patient_visit_id`, `medicine_detail_id`, `quantity`)
-                VALUES($lastInsertId, $medId, $capsuleQuantity);";
-          
-                $stmtDetails = $con->prepare($queryMedicationHistory);
-                $stmtDetails->execute();
-          
-                $updateMedicineQuery = "UPDATE `medicine_details` SET `total_capsules` = $totalLeft
-                WHERE `medicine_details`.`id` = $medId";
-          
-                $stmtMedicine = $con->prepare($updateMedicineQuery);
-                $stmtMedicine->execute();
-              }
                 
             $con->commit();
 
@@ -222,20 +183,15 @@ if (isset($_POST['save_Patient'])) {
     }
     header("Location:congratulation.php?goto_page=patients.php&message=$message");
     exit;
-    
 }
-$patients = getPatients($con);
-$employee = getEmployee($con);
-$medicines = getMedicines($con);
-
 
 
 
 try {
 
-    $query = "SELECT  patients.*, date_format(`date_of_birth`, '%d %b %Y') as `date_of_birth`, 
-`phone_number`, `gender`, `complaint`,   `bp`, `temp`, `pr`, `weight`, `height`, `iden`, `disease`, `allergy`
-FROM `patients` order by `student_number` asc;"; 
+    $query = "SELECT  employee_record.*, date_format(`date_of_birth`, '%d %b %Y') as `date_of_birth`, 
+`phone_number`, `gender`, `complaint`
+FROM `employee_record` order by `employee_number` asc;"; 
 
     $stmtPatient1 = $con->prepare($query);
     $stmtPatient1->execute();
@@ -245,7 +201,6 @@ FROM `patients` order by `student_number` asc;";
     echo $ex->getTraceAsString();
     exit;
 }
-
 
 
 ?>
@@ -299,7 +254,7 @@ FROM `patients` order by `student_number` asc;";
                         <div class="row">
                         <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
                                 <label>Student Number</label>
-                                <input type="number" name="student_number" id="student_number" required="required"
+                                <input type="number" name="employee_number" id="employee_number" required="required"
                                        class="form-control form-control-sm rounded-0"/>
                             </div>
                             <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
@@ -316,20 +271,32 @@ FROM `patients` order by `student_number` asc;";
                                        class="form-control form-control-sm rounded-0"/>
                             </div>
                             <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
-                                <label>Course</label>
-                                <select class="form-control form-control-sm rounded-0" id="course" name="course" required="required"> 
-                                <option value="">--- Select Course ---</option>
-                                <option value="Bachelor of Science in Accountancy">Bachelor of Science in Accountancy</option>
-                                <option value="Bachelor of Science in Business Administration">Bachelor of Science in Business Administration</option>
-                                <option value="Bachelor of Science in Computer Engineering">Bachelor of Science in Computer Engineering</option>
-                                <option value="Bachelor of Science in Criminology">Bachelor of Science in Criminology</option>
-                                <option value="Bachelor of Science in Education">Bachelor of Science in Education</option>
-                                <option value="Bachelor of Science in Industrial Engineering">Bachelor of Science in Industrial Engineering</option>
-                                <option value="Bachelor of Science in Information Technology">Bachelor of Science in Information Technology</option>
-                                <option value="International Hospitality Management">International Hospitality Management</option>
-                                <option value="Bachelor of Science in Legal Management">Bachelor of Science in Legal Management</option>
-                                <option value="Bachelor of Science in Psychology">Bachelor of Science in Psychology</option>
-                                <option value="Bachelor of Science in Tourism Management">Bachelor of Science in Tourism Management</option>
+                            <label>Department</label>
+                                <select class="form-control form-control-sm rounded-0" id="department" name="department" required="required"> 
+                                <option value="">--- Select Department ---</option>
+                                <option value="COLLEGE OF ALIED AND MEDICAL SCIENCES">COLLEGE OF ALIED AND MEDICAL SCIENCES</option>
+                                <option value="COLLEGE OF ARTS AND SCIENCES">COLLEGE OF ARTS AND SCIENCES</option>
+                                <option value="COLLEGE OF CRIMINAL JUSTICE">COLLEGE OF CRIMINAL JUSTICE</option>
+                                <option value="COLLEGE OF EDUCATION">COLLEGE OF EDUCATION</option>
+                                <option value="ETEEAP">ETEEAP</option>
+                                <option value="COLLEGE OF BUSINESS ACCOUNTANCY">COLLEGE OF BUSINESS ACCOUNTANCY</option>
+                                <option value="COLLEGE OF ENGINEERING">COLLEGE OF ENGINEERING </option>
+                                <option value="COLLEGE OF INFORMATION AND COMMUNICATIONS AND TECHNOLOG">COLLEGE OF INFORMATION AND COMMUNICATIONS AND TECHNOLOGY</option>
+                                <option value="COLLEGE OF LAW">COLLEGE OF LAW</option>
+                                <option value="COLLEGE OF NURSING AND MIDWIFERY">COLLEGE OF NURSING AND MIDWIFERY </option>
+                                <option value="COLLEGE OF TOURISM AND HOSPITALITY MANAGEMENT">COLLEGE OF TOURISM AND HOSPITALITY MANAGEMENT </option>
+                                <option value="SENIOR HIGH SCHOOL">SENIOR HIGH SCHOOL</option>
+                                <option value="JUNIOR HIGH SCHOOL">JUNIOR HIGH SCHOOL</option>
+                                <option value="COLLEGE OF INFORMATION TECHNOLOGY, ENTERTAINMENT AND COMMUNICATION">COLLEGE OF INFORMATION TECHNOLOGY, ENTERTAINMENT AND COMMUNICATION </option>
+                                <option value="COLLEGE OF ENTREPRENEURSHIP, TOURISM, HOSPITALITY AND REAL ESTATE MANAGEMENT">COLLEGE OF ENTREPRENEURSHIP, TOURISM, HOSPITALITY AND REAL ESTATE MANAGEMENT</option>
+                                <option value="COLLEGE OF ENGINEERING AND ARCHITECTURE">COLLEGE OF ENGINEERING AND ARCHITECTURE</option>
+                                <option value="COLLEGE OF EDUCATION, ARTS AND SCIENCES">COLLEGE OF EDUCATION, ARTS AND SCIENCES</option>
+                                <option value="COLLEGE OF CRIMINAL JUSTICE EDUCATION">COLLEGE OF CRIMINAL JUSTICE EDUCATION</option>
+                                <option value="COLLEGE OF BUSINESS, ACCOUNTANCY AND AUDITING">COLLEGE OF BUSINESS, ACCOUNTANCY AND AUDITING</option>
+                                <option value="REGISTRAR OFFICE">REGISTRAR OFFICE </option>
+                                <option value="ACCOUNTING OFFICE">ACCOUNTING OFFICE</option>
+                                <option value="CASHIER OFFICE">CASHIER OFFICE</option>
+                                <option value="ADMISSION OFFICE">ADMISSION OFFICE </option>
                             
                             </select>
                             </div>
@@ -377,136 +344,7 @@ FROM `patients` order by `student_number` asc;";
                                 <input type="text" id="complaint" name="complaint" required="required"
                                        class="form-control form-control-sm rounded-0"/>
                             </div>
-                       
-                        <div class="col-md-12"><hr></div>
-                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
-                                <label>Blood Pressure</label>
-                                <select class="form-control form-control-sm rounded-0" id="bp" name="bp" required="required">
-                                <option value="">--- Select Blood Pressure ---</option>
-                                <option value="NORMAL">NORMAL (LESS THAN 120	and	LESS THAN 80)</option>
-                                <option value="ELEVATED">ELEVATED (120 – 129	and	LESS THAN 80)</option>
-                                <option value="HIGH BLOOD PRESSURE (HYPERTENSION) STAGE 1">HIGH BLOOD PRESSURE (HYPERTENSION) STAGE 1 (130 – 139	or	80 – 89)</option>
-                                <option value="HIGH BLOOD PRESSURE (HYPERTENSION) STAGE 2">HIGH BLOOD PRESSURE (HYPERTENSION) STAGE 2 (140 OR HIGHER	or	90 OR HIGHER)</option>
-                                <option value="HYPERTENSIVE CRISIS">HYPERTENSIVE CRISIS (HIGHER THAN 180	and/or	HIGHER THAN 120)</option>
-                                 </select>
-      </div>
-      <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
-        <label>Temperature</label>
-        <input id="temp" class="form-control form-control-sm rounded-0" name="temp" required="required">
-      </div>
-      <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
-        <label>Pulse rate</label>
-        <input id="pr" class="form-control form-control-sm rounded-0" name="pr" required="required">
-      </div>
-      <div class="col-md-12"><hr></div>
-
-
-      <div class="col-lg-2 col-md-4 col-sm-4 col-xs-10">
-		<label for="weight">Weight (kg):</label>
-		<input type="number" class="form-control form-control-sm rounded-0" id="weight" name="weight" required=""><br>
-    </div>
-
-    <div class="col-lg-2 col-md-4 col-sm-4 col-xs-10"> 
-		<label for="height">Height (cm):</label>
-		<input type="number" class="form-control form-control-sm rounded-0" id="height" name="height" required=""><br>
-    </div>
-
-    <div class="col-lg-1 col-md-1 col-sm-6 col-xs-12">
-    <label>&nbsp;</label>
-		<input type="button" class="btn btn-primary btn-sm btn-flat btn-block" value="Calculate" onclick="calculateBMI()" required="required">
-    </div>	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;	&nbsp;
-
-    
-
-    <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
-		<label for="bmi">Body Mass Index:</label>
-		<input type="text" class="form-control form-control-sm rounded-0" id="bmi" name="bmi" readonly="">
-    </div>
-
-    <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
-		<label for="identification">Identification:</label>
-		<input type="text" class="form-control form-control-sm rounded-0" id="iden" name="iden" readonly="">
-</div>
-
-<div class="col-md-12"><hr></div>
-
-
-
-      <div class="col-lg-8 col-md-8 col-sm-6 col-xs-12">
-        <label>Disease</label>
-        <input id="disease" required="required" name="disease" class="form-control form-control-sm rounded-0">
-      </div>
-      <div class="col-lg-8 col-md-8 col-sm-6 col-xs-12">
-      <label>Allergy&nbsp;<text style="font-size:.8rem">(optional)</text></label>
-        <input id="allergy" name="allergy" class="form-control form-control-sm rounded-0">
-      </div>
-
-
-    </div>
-
-    <div class="col-md-12"><hr></div>
-    <div class="clearfix">&nbsp;</div>
-
-    <div class="row">
-     <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-      <label>Select Medicine</label>
-      <select id="medicine" class="form-control form-control-sm rounded-0">
-        <option value="">Select Medicine</option><option value="8">Amoxicillin</option><option value="9">Antibiotic</option><option value="3">Antihistamine</option><option value="4">Atorvastatin</option><option value="17">Diatabs</option><option value="5">Losartan</option><option value="6">Mefenamic</option><option value="15">Metformin</option><option value="18">try</option>      </select>
-    </div>
-
-    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-     <p id="packing" value="">No medicine selected</p>
-    </div>
-
-    <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
-      <label>Quantity</label>
-      <input id="quantity" type="number" min="1" max="10" class="form-control form-control-sm rounded-0">
-    </div>
-
-    <div class="col-lg-1 col-md-1 col-sm-6 col-xs-12">
-      <label>&nbsp;</label>
-      <button id="add_to_list" type="button" class="btn btn-primary btn-sm btn-flat btn-block">
-        <i class="fa fa-plus"></i>
-      </button>
-    </div>
-
-  </div>
-
-  <div class="clearfix">&nbsp;</div>
-  <div class="row table-responsive">
-    <table id="medication_list" class="table table-striped table-bordered">
-      <colgroup>
-        <col width="10%">
-        <col width="50%">
-        <col width="10%">
-        <col width="10%">
-        <col width="15%">
-        <col width="5%">
-      </colgroup>
-      <thead class="bg-primary">
-        <tr>
-          <th class="p-1 align-middle">No.</th>
-          <th class="p-1 align-middle">Medicine Name</th>
-          <th class="p-1 align-middle">QTY</th>
-          <th class="p-1 align-middle">Action</th>
-        </tr>
-      </thead>
-
-      <tbody id="current_medicines_list">
-
-      </tbody>
-    </table>
-  </div>
-  <div id="medicineInputs">
-    <!-- Hidden inputs -->
-
-    <div class="clearfix">&nbsp;</div>
-    <div class="clearfix">&nbsp;</div>
-    <div class="clearfix">&nbsp;</div>
-    <div class="clearfix">&nbsp;</div>
-    </div>
-
-
+                        </div>
                         <div class="clearfix">&nbsp;</div>
                         <strong>Past Medical History: Has the child suffered from any of the following</strong>
                         <div class="row">
@@ -515,29 +353,41 @@ FROM `patients` order by `student_number` asc;";
                                     <thead>
                                         <tr>
                                             <th scope="col">Disease</th> 
-                                            <th scope="col" class="border-right">Yes</th>
+                                            <th scope="col">Yes</th>
+                                            <th scope="col" class="border-right">No</th>
                                             <th scope="col" >Disease</th>
                                             <th scope="col">Yes</th>
+                                            <th scope="col">No</th>
+                                            
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php for($i = 0; $i < $past_medical_len; $i+=2): ?>
                                             <tr class="border-bottom">
                                                 <td><?= makeTitle($past_medical_fields[$i], '_') ?></td>
-                                                <td class="border-right">
+                                                <td>
                                                     <div class="form-check form-check-inline">
-                                                        <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i] . '_pm' ?>" id="<?= $past_medical_fields[$i] . '_pm' ?>" value="yes" >
+                                                        <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i] . '_pm' ?>" id="<?= $past_medical_fields[$i] . '_pm' ?>" value="yes" required>
                                                     </div>
                                                 </td>
-                                                
+                                                <td class="border-right">
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i] . '_pm' ?>" id="<?=$past_medical_fields[$i] . '_pm' ?>" value="no" required>
+                                                    </div>
+                                                </td>
                                                 <?php if($i + 1 < $past_medical_len): ?>
                                                     <td><?= makeTitle($past_medical_fields[$i + 1], '_') ?></td>
                                                     <td>
                                                         <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i + 1] . '_pm' ?>" id="<?= $past_medical_fields[$i + 1] . '_pm' ?>" value="yes" >
+                                                            <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i + 1] . '_pm' ?>" id="<?= $past_medical_fields[$i + 1] . '_pm' ?>" value="yes" required>
                                                         </div>
                                                     </td>
-                                                    
+                                                    <td>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" name="<?= $past_medical_fields[$i + 1] . '_pm' ?>" id="<?= $past_medical_fields[$i + 1] . '_pm' ?>" value="no" required>
+                                                            
+                                                        </div>
+                                                    </td>
                                                 <?php endif; ?>
                                         <?php endfor; ?>
                                     </tbody>
@@ -568,16 +418,16 @@ FROM `patients` order by `student_number` asc;";
                                                 <td><?= makeTitle($family_history_fields[$i], '_') ?></td>
                                                 <td>
                                                     <div class="form-check form-check-inline">
-                                                        <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i] ?>" id="<?= $family_history_fields[$i] ?>" value="yes" >
+                                                        <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i] ?>" id="<?= $family_history_fields[$i] ?>" value="yes" required>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="form-check form-check-inline">
-                                                        <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i] ?>" id="<?= $family_history_fields[$i] ?>" value="no" >
+                                                        <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i] ?>" id="<?= $family_history_fields[$i] ?>" value="no" required>
                                                     </div>
                                                 </td>
                                                 <td class="border-right">
-                                                    <select class="form-control form-control-sm rounded-0" id="<?= $family_history_fields[$i] . '_relation'?>" name="<?= $family_history_fields[$i] . '_relation'?>" > 
+                                                    <select class="form-control form-control-sm rounded-0" id="<?= $family_history_fields[$i] . '_relation'?>" name="<?= $family_history_fields[$i] . '_relation'?>" required="required"> 
                                                         <option value="">--- Select Relation ---</option>
                                                         <option value="None">None</option>
                                                         <option value="Grandparents">Grandparents</option>
@@ -591,12 +441,12 @@ FROM `patients` order by `student_number` asc;";
                                                     <td><?= makeTitle($family_history_fields[$i + 1], '_') ?></td>
                                                     <td>
                                                         <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i + 1] ?>" id="<?= $family_history_fields[$i + 1] ?>" value="yes" >
+                                                            <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i + 1] ?>" id="<?= $family_history_fields[$i + 1] ?>" value="yes" required>
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i + 1] ?>" id="<?= $family_history_fields[$i + 1] ?>" value="no" >
+                                                            <input class="form-check-input" type="radio" name="<?= $family_history_fields[$i + 1] ?>" id="<?= $family_history_fields[$i + 1] ?>" value="no" required>
                                                         </div>
                                                     </td>
                                                     <td>
@@ -716,7 +566,7 @@ FROM `patients` order by `student_number` asc;";
     <script src="plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
 
     <script>
-        showMenuSelected("#mnu_patients", "#mi_patients");
+        showMenuSelected("#mnu_record", "#mi_employee");
 
         var message = '<?php echo $message;?>';
 
@@ -801,190 +651,3 @@ FROM `patients` order by `student_number` asc;";
     </script>
 </body>
 </html>
-<script>
-		function calculateBMI() {
-			var weight = document.getElementById("weight").value;
-			var height = document.getElementById("height").value;
-			var bmi = weight / ((height/100) ** 2);
-			document.getElementById("bmi").value = bmi.toFixed(2);
-
-			if (bmi < 18.5) {
-				document.getElementById("iden").value = "Underweight";
-			} else if (bmi >= 18.5 && bmi < 25) {
-				document.getElementById("iden").value = "Normal weight";
-			} else if (bmi >= 25 && bmi < 30) {
-				document.getElementById("iden").value = "Overweight";
-			} else {
-				document.getElementById("iden").value = "Obese";
-			}
-		}
-	</script>
-
-<script>
-  var serial = 1;
-
-  var message = '<?php echo $message;?>';
-
-  if(message !== '') {
-    showCustomMessage(message);
-  }
-
-  var medicineCountCache = {
-    decrementCount: function(medID, newVal) {
-      let {totalQuantity, totalCapsules} = this[medID];
-      newVal = parseInt(newVal);
-
-      if(isNaN(newVal) || newVal < 0){
-        showCustomMessage("Please enter a number and should a positve value");
-        return false;
-      } 
-      
-      if(newVal > totalCapsules){
-
-        showCustomMessage("Not enough stocks");
-        return false;
-      }
-      
-      this[medID].totalQuantity = totalQuantity + newVal;
-      this[medID].totalCapsules = totalCapsules - newVal;
-      console.log(`decrementCount ${this[medID].totalQuantity} ${this[medID].totalCapsules}`);
-      return true;
-    },
-    incrementCount: function(medID, newVal) {
-      let {totalQuantity, totalCapsules} = this[medID];
-      newVal = parseInt(newVal);
-      this[medID].totalQuantity = totalQuantity - newVal;
-      this[medID].totalCapsules = totalCapsules + newVal;
-      console.log(`incrementCount ${this[medID].totalQuantity} ${this[medID].totalCapsules}`);
-
-    }
-  };
-
-  $(document).ready(function() {
-    
-    $('#medication_list').find('td').addClass("px-2 py-1 align-middle")
-    $('#medication_list').find('th').addClass("p-1 align-middle")
-    $('#visit_date').datetimepicker({
-      format: 'L'
-    });
-
-
-    $("#medicine").change(function() {
-
-      // var medicineId = $("#medicine").val();
-      let medicineId = $(this).val();
-      const htmlText = `Total left: `;
-      const packing = $("#packing");
-      if(medicineId !== '') {
-        if(medicineId in medicineCountCache){
-            packing.attr('value', medicineCountCache[medicineId].totalCapsules);
-            packing.html(htmlText + medicineCountCache[medicineId].totalCapsules);
-        }
-        else{
-            $.ajax({
-              url: "ajax/get_packings.php",
-              type: 'GET', 
-              data: {
-                'medicine_id': medicineId
-              },
-              cache:false,
-              async:false,
-              success: function (data, status, xhr) {
-                packing.attr('value', data);
-                packing.html(htmlText + data);
-                medicineCountCache[medicineId] = {totalQuantity: 0, totalCapsules: parseInt(data)};
-              },
-              error: function (jqXhr, textStatus, errorMessage) {
-                showCustomMessage(errorMessage);
-              }
-            });
-        }
-        
-      }
-      else{
-        packing.attr("value", "");
-        packing.html("No medicine selected");
-      }
-    });
-
-
-    $("#add_to_list").click(function() {
-      let medicineId = $("#medicine").val();
-     
-      if(medicineId === ''){
-        showCustomMessage('Please select a medicine');
-        return;
-      }
-      var medicineName = $("#medicine option:selected").text();
-      
-      var quantity = $("#quantity").val().trim();
-
-      if(medicineCountCache.decrementCount(medicineId, quantity) === false){
-        return;
-      }
-
-      var oldData = $("#current_medicines_list").html();
-
-      if(medicineName !== '' && packing !== '' && quantity !== '') {
-        
-        
-        // inputs = inputs + '<input type="hidden" name="quantities[]" value="'+quantity+'" />';
-        // if($("input[]"))
-        const medCapsulesLeftQuery = $(`[name="medicineCapsulesLeft[${medicineId}]"]`);
-        const medCapsulesQtyQuery = $(`[name="medicineCapsulesQty[${medicineId}]"]`);
-        if(medCapsulesLeftQuery.length > 0 && medCapsulesQtyQuery.length > 0){
-          medCapsulesLeftQuery.val(medicineCountCache[medicineId].totalCapsules);
-          medCapsulesQtyQuery.val(medicineCountCache[medicineId].totalQuantity);
-        }else{
-          const input1 = `<input type="hidden" name="medicineCapsulesLeft[${medicineId}]" value="${medicineCountCache[medicineId].totalCapsules}" /> `;
-          const input2 = `<input type="hidden" name="medicineCapsulesQty[${medicineId}]" value="${medicineCountCache[medicineId].totalQuantity}" />`;
-          $("#medicineInputs").append(input1 + input2);
-        }
-
-        var tr = `<tr medid=${medicineId} quantity=${quantity}>`;
-        tr = tr + '<td class="px-2 py-1 align-middle">'+serial+'</td>';
-        tr = tr + '<td class="px-2 py-1 align-middle">'+medicineName+'</td>';
-        tr = tr + '<td class="px-2 py-1 align-middle">'+quantity+'</td>';
-
-        tr = tr + '<td class="px-2 py-1 align-middle text-center"><button type="button" class="btn btn-outline-danger btn-sm rounded-0" onclick="deleteCurrentRow(this);"><i class="fa fa-times"></i></button></td>';
-        tr = tr + '</tr>';
-        oldData = oldData + tr;
-        serial++;
-
-        $("#current_medicines_list").html(oldData);
-
-        $("#medicine").val('');
-
-        $("#packing").attr('value', '');
-        $("#packing").html('No medicine selected');
-
-        $("#quantity").val('');
-
-      } else {
-        showCustomMessage('Please fill all fields.');
-      }
-
-    });
-
-  });
-
-  function deleteCurrentRow(obj) {
-    const parent = obj.parentNode.parentNode;
-    const medId = parent.getAttribute('medid');
-    const quantity = parent.getAttribute('quantity');
-    var rowIndex = obj.parentNode.parentNode.rowIndex;
-    medicineCountCache.incrementCount(medId, quantity);
-    document.getElementById("medication_list").deleteRow(rowIndex);
-
-    const medCapsulesLeftQuery = $(`[name="medicineCapsulesLeft[${medId}]"]`);
-    const medCapsulesQtyQuery = $(`[name="medicineCapsulesQty[${medId}]"]`);
-    if(medicineCountCache[medId].totalQuantity === 0){
-      medCapsulesLeftQuery.remove();
-      medCapsulesQtyQuery.remove();
-    }
-    else{
-      medCapsulesLeftQuery.val(medicineCountCache[medId].totalCapsules);
-      medCapsulesQtyQuery.val(medicineCountCache[medId].totalQuantity);
-    }
-  }
-</script>

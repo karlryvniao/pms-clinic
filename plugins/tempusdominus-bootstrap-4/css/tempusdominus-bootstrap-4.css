@@ -14,7 +14,9 @@
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
-
+p .example{
+    font-size: .7rem;
+}
 body.tempusdominus-bootstrap-datetimepicker-widget-day-click,
 body.tempusdominus-bootstrap-datetimepicker-widget-day-click * {
   cursor: pointer !important;

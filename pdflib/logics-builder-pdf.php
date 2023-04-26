@@ -168,11 +168,11 @@ class LB_PDF extends FPDF {
     public function Header() {
         if ($this->pageHeaderRepeat || (!$this->pageHeaderRepeat && !$this->pageHeaderAdded)) {
             // Logo
-            $this->Image('dist/img/logo.jpg', $this->GetX(), $this->GetY(), 30);
+            $this->Image("logo.png", $this->GetX(), $this->GetY(), 30);
             // Times bold 13
             $this->SetFont('', 'B', self::HEADING_SIZE);
             // Title
-            $this->Cell(0, 7, 'Patient Management System', 0, 0, 'C');
+            $this->Cell(0, 7, 'University of Batangas in Lipa', 0, 0, 'C');
             $this->Ln();
             $this->Cell(0, 7, $this->reportTitle, 0, 0, 'C');
             $this->Ln();

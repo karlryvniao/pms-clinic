@@ -49,6 +49,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <title>Clinic</title>
+    <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -155,11 +156,11 @@ try {
             <div class="captionTextHolder"><p class="captionText slideTextFromTop"></p></div>
             <div class="imageHolder">
                 <img src="images/clinic_1.jpg">1366X768
-                <p class="captionText">Kaneki Ken from Tokyo Ghoul</p>
+                <p class="captionText">University of Batangas in Lipa</p>
             </div>
             <div class="imageHolder">
                 <img src="images/clinic_2.jpg">
-                <p class="captionText">The Electric Bed</p>
+                <p class="captionText">The clinic bed</p>
             </div>
             <div class="imageHolder">
                 <img src="images/clinic_3.jpg">
@@ -171,7 +172,7 @@ try {
             </div>
             <div class="imageHolder">
                 <img src="images/clinic_5.jpg">
-                <p class="captionText">Meliodas from The Seven Deadly Sins</p>
+                <p class="captionText">The Hospital bed</p>
             </div>
         </div>
         <div id="dotsContainer"></div>

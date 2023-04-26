@@ -95,8 +95,9 @@ function getMedicine($con, $medicineId = 0) {
 
 
 function getPatients($con) {
-$query = "select `id`, `patient_name`, `phone_number` 
-from `patients` order by `patient_name` asc;";
+$query = "select `id`, `student_number`, `patient_name` 
+from `patients` order by `student_number` asc;";
+
 
 	$stmt = $con->prepare($query);
 	try {
@@ -111,11 +112,34 @@ from `patients` order by `patient_name` asc;";
 	$data = '<option value="">Select Patient</option>';
 
 	while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-		$data = $data.'<option value="'.$row['id'].'">'.$row['patient_name'].' ('.$row['phone_number'].')'.'</option>';
+		$data = $data.'<option value="'.$row['id'].'">'.$row['student_number'].' ('.$row['patient_name'].')'.'</option>';
 	}
 
 	return $data;
 }
+
+function getEmployee($con) {
+	$query = "select `id`, `employee_number`, `patient_name` 
+	from `employee_record` order by `employee_number` asc;";
+	
+		$stmt = $con->prepare($query);
+		try {
+			$stmt->execute();
+	
+		} catch(PDOException $ex) {
+			echo $ex->getTraceAsString();
+			echo $ex->getMessage();
+			exit;
+		}
+	
+		$data = '<option value="">--------------------------------------------------Employees--------------------------------------------------</option>';
+	
+		while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$data = $data.'<option value="'.$row['id'].'">'.$row['employee_number'].' ('.$row['patient_name'].')'.'</option>';
+		}
+	
+		return $data;
+	}
 
 
 function getDateTextBox($label, $dateId) {
@@ -157,4 +181,7 @@ function formatDateInsert($date){
 	$dateArr = explode('/', $date);
 	return $dateArr[2].'-'.$dateArr[0].'-'.$dateArr[1];
 }
+
+
+
 ?>

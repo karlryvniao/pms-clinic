@@ -54,6 +54,7 @@ try {
 <head>
  <?php include './config/site_css_links.php';?>
  <title>Update Medicine - Clinic's Patient Management System in PHP</title>
+ <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
 
  <link rel="stylesheet" href="plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
  <link rel="stylesheet" href="plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
@@ -100,9 +101,13 @@ include './config/sidebar.php';?>
               <input type="hidden" name="hidden_id" 
               id="hidden_id" value="<?php echo $id;?>" />
 
-          		<div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">
+          		<div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">Medicine Name
           			<input type="text" id="medicine_name" name="medicine_name" required="required"
-          			class="form-control form-control-sm rounded-0" value="<?php echo $row['medicine_name'];?>" />
+          			class="form-control form-control-sm rounded-0" value="<?php echo $row['medicine_name'];?>"/>
+          		</div>
+              <div class="col-lg-4 col-md-4 col-sm-4 col-xs-10">Description
+          			<input type="text" id="description" name="description" required="required"
+          			class="form-control form-control-sm rounded-0" value="<?php echo $row['description'];?>"/>
           		</div>
           		<div class="col-lg-1 col-md-2 col-sm-2 col-xs-2">
           			<button type="submit" id="save_medicine" 

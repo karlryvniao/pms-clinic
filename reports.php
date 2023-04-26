@@ -2,9 +2,9 @@
 include './config/connection.php';
 include './common_service/common_functions.php';
 
-$connect = mysqli_connect("localhost", "root", "", "pms_db");  
+$con = mysqli_connect("localhost", "root", "", "pms_db");  
 $query = "SELECT gender, count(*) as number FROM patients GROUP BY gender";  
-$result = mysqli_query($connect, $query);  
+$result = mysqli_query($con, $query);  
 
 ?>
 <!DOCTYPE html>
@@ -12,8 +12,12 @@ $result = mysqli_query($connect, $query);
 <head>
  <?php include './config/site_css_links.php' ?>
 
+
+ <link rel="stylesheet" type='' href="plugins/admincss/admin.css" />
+
  <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
  <title></title>
+ <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
 
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
@@ -87,7 +91,7 @@ include './config/sidebar.php';?>
 
 
           <?php
-$con  = mysqli_connect("localhost","root","","pms_db");
+
  if (!$con) {
      # code...
     echo "Problem in database connection! Contact administrator!" . mysqli_error();
@@ -145,7 +149,13 @@ $con  = mysqli_connect("localhost","root","","pms_db");
                                 "#ffc750",
                                 "#2ec551",
                                 "#7040fa",
-                                "#ff004e"
+                                "#ff004e",
+                                "#FFFF00",
+                                "#808000",
+                                "#00FF00",
+                                "#008000",
+                                "#00FFFF",
+                                "#FF00FF"
                             ],
                             data:<?php echo json_encode($sales); ?>,
                         }]
@@ -165,6 +175,22 @@ $con  = mysqli_connect("localhost","root","","pms_db");
  
                 }
                 });
+    </script>
+<?php include './config/site_js_links.php';
+?>
+<script src="plugins/moment/moment.min.js"></script>
+<script src="plugins/daterangepicker/daterangepicker.js"></script>
+<script src="plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+    <script>
+        showMenuSelected("#mnu_reports", "#mi_analytics");
+
+        $(function () {
+            $("#all_patients").DataTable({
+                "responsive": true, "lengthChange": false, "autoWidth": false,
+                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+            }).buttons().container().appendTo('#all_patients_wrapper .col-md-6:eq(0)');
+
+        });
     </script>
         </div>
           </div>
@@ -188,7 +214,13 @@ $con  = mysqli_connect("localhost","root","","pms_db");
 
 <script>
 
- 
+$(function () {
+            $("#patient_history").DataTable({
+                "responsive": true, "lengthChange": false, "autoWidth": false,
+                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+            }).buttons().container().appendTo('#all_patients_wrapper .col-md-6:eq(0)');
+
+        });
 
 </script>
 </body>

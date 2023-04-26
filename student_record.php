@@ -212,7 +212,7 @@ FROM `patients` order by `student_number` asc;";
     <?php include './config/data_tables_css.php';?>
 
     <link rel="stylesheet" href="plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
-    <title></title>
+    <title><img src="images/logo.png" alt="logo" width="230" height="100" style="float:right"></title>
     <link rel="icon" href="./images/ubicon.png" sizes="32x32" type="image/png">
 
 </head>
@@ -268,6 +268,12 @@ FROM `patients` order by `student_number` asc;";
                                 <th>Phone Number</th>
                                 <th>Gender</th>
                                 <th>Complaints</th>
+                                <th>Blood Pressure</th>
+                                <th>Temperature</th>
+                                <th>Pulse Rate</th>
+                                <th>Respiratory Rate</th>
+                                <th>BMI</th>
+                                <th>Identification</th>
                                 <th>Action</th>
                             </tr>
                             </thead>
@@ -288,7 +294,16 @@ FROM `patients` order by `student_number` asc;";
                                     <td><?php echo $row['phone_number'];?></td>
                                     <td><?php echo $row['gender'];?></td>
                                     <td><?php echo $row['complaint'];?></td>
+                                    <td><?php echo $row['bp'];?></td>
+                                    <td><?php echo $row['temp'];?></td>
+                                    <td><?php echo $row['pr'];?></td>
+                                    <td><?php echo $row['respi'];?></td>
+                                    <td><?php echo $row['complaint'];?></td>
+                                    <td><?php echo $row['complaint'];?></td>
                                     <td style="display: flex;">
+                                    <a href="update_patient.php?id=<?php echo $row['id'];?>" class = "btn btn-primary btn-sm btn-flat">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
                                         <form action="" method="POST">
                                             <input type="hidden" value="<?=$row['phone_number'];?>" name="messagePhoneNumber">
                                             <input type="hidden" value="<?=$row['patient_name'];?>" name="messagePatientName">
@@ -336,7 +351,7 @@ FROM `patients` order by `student_number` asc;";
     <script src="plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
 
     <script>
-        showMenuSelected("#mnu_reports", "#mi_sms");
+        showMenuSelected("#mnu_record", "#mi_student");
 
         var message = '<?php echo $message;?>';
 
@@ -417,7 +432,10 @@ FROM `patients` order by `student_number` asc;";
 
         });
 
+      
+
 
     </script>
+  
 </body>
 </html>

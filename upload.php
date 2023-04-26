@@ -238,7 +238,7 @@ try {
 
 
 <script>
-    showMenuSelected("#mnu_forms", "");
+    showMenuSelected("#mnu_upload", "");
 
     var message = '<?php echo $message;?>';
 
@@ -279,8 +279,6 @@ try {
 
         });
     });
-
-    
 </script>
 </body>
 </html>
